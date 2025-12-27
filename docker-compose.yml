@@ -15,6 +15,29 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - frugalfox-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: frugalfox-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/frugalfox
+      SPRING_DATASOURCE_USERNAME: frugalfox
+      SPRING_DATASOURCE_PASSWORD: frugalfox
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - frugalfox-network
 
 volumes:
   postgres_data:
+
+networks:
+  frugalfox-network:
+    driver: bridge

@@ -9,7 +9,7 @@ public class HelloController {
   
   @GetMapping("/")
   public String index() {
-    return "Welcome to the Frugal Fox API!";
+    return "Welcome to the Frugal Fox API! This is the base route. Nothing to see here.";
   }
 
 }

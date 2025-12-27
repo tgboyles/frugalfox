@@ -3,27 +3,41 @@ An intelligent, lightweight budgeting app.
 
 ## Prerequisites
 
-- Java 25
+- Java 25 or higher
 - Maven 3.x
 - Docker and Docker Compose
 
 ## Development Setup
 
-### Database
+### Running with Docker Compose (Recommended)
 
-Start the PostgreSQL database using Docker Compose:
+#### General
+
+The entire stack is configured to build and deploy via Docker Compose. You can start it thusly:
 
 ```bash
-docker compose up -d
+docker compose down
+docker compose up --build --force-recreate 
 ```
 
-This will start a PostgreSQL 17 container with:
-- Database: `frugalfox`
-- Username: `frugalfox`
-- Password: `frugalfox`
-- Port: `5432`
+This will start:
+- **PostgreSQL 17** container on port `5432`
+  - Database: `frugalfox`
+  - Username: `frugalfox`
+  - Password: `frugalfox`
+- **Backend application** on port `8080`
+  - Container will be completely rebuild
+  - Tests will be run in first stage
 
-Stop the database:
+#### Granular Docker Operations
+
+View logs:
+
+```bash
+docker compose logs -f backend
+```
+
+Stop all services:
 
 ```bash
 docker compose down
@@ -35,7 +49,17 @@ Stop and remove all data:
 docker compose down -v
 ```
 
-## Building the Application
+#### Database Only
+
+If you want to run just the database (for local development):
+
+```bash
+docker compose up -d postgres
+```
+
+### Local Build Operations, Backend
+
+#### Build
 
 From the `backend` directory:
 
@@ -55,7 +79,7 @@ To build without running tests:
 mvn clean package -DskipTests
 ```
 
-## Running Tests
+#### Test
 
 Run all tests:
 
@@ -70,35 +94,24 @@ Run a specific test class:
 mvn test -Dtest=HelloControllerTest
 ```
 
-## Running the Application
+#### Run
 
-### Option 1: Using Maven Spring Boot Plugin
+You can start the backend app via Maven:
 
 ```bash
 cd backend
 mvn spring-boot:run
 ```
 
-### Option 2: Running the WAR file
-
-First build the application, then run:
-
-```bash
-cd backend
-java -jar target/frugalfox-0.0.1-SNAPSHOT.war
-```
-
 The application will start on `http://localhost:8080`
 
-### Verify the Application
+#### Verify the Application
 
 Once running, test the API:
 
 ```bash
 curl http://localhost:8080/
 ```
-
-Expected response: `Welcome to the Frugal Fox API!`
 
 Check actuator health endpoint:
 

@@ -31,7 +31,7 @@ public class HelloControllerTest {
   public void getHello() throws Exception {
     mvc.perform(get("/").accept(MediaType.APPLICATION_JSON))
       .andExpect(status().isOk())
-      .andExpect(content().string(equalTo("Welcome to the Frugal Fox API!")));
+      .andExpect(content().string(equalTo("Welcome to the Frugal Fox API! This is the base route. Nothing to see here.")));
   }
   
 }
