@@ -1,3 +1,5 @@
+<img width="1024" height="1024" alt="image" src="https://github.com/user-attachments/assets/7132ffdf-4362-44ad-9ca2-da1115cc2f1c" />
+
 # Frugal Fox
 
 JWT-authenticated expense tracking API with user isolation, advanced search, and Flyway migrations.
