@@ -66,7 +66,7 @@ The easiest way to explore and test the API is using the included Postman collec
 2. **Import the Collection**
    - Open Postman and sign in (required to use collections)
    - Click **Import** button (top left)
-   - Select `Frugal_Fox_API.postman_collection.json` from the project root
+   - Select `backend/postman_collection.json` from the project root
    - Collection will appear in your workspace sidebar
 
 3. **Start Testing**
