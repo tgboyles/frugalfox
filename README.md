@@ -2,9 +2,7 @@
 
 # Frugal Fox
 
-JWT-authenticated expense tracking API with user isolation, advanced search, and Flyway migrations.
-
-**Stack**: Spring Boot 4.0.1 • PostgreSQL 17 • Spring Security • JPA • Flyway • Docker
+Frugal Fox is an demonstrative budgeting app that leverages Java, Spring Boot and various commodity AI technologies such as agentic behaviors, Model Context Protocol usage and chat capabilities.
 
 ## Quick Start
 
@@ -55,7 +53,42 @@ mvn spring-boot:run
 
 ## API Usage
 
-### Getting Started: Authentication
+### Option 1: Postman Collection (Recommended)
+
+The easiest way to explore and test the API is using the included Postman collection.
+
+**Setup:**
+
+1. **Install Postman**
+   - Download from [postman.com/downloads](https://www.postman.com/downloads/)
+   - Or use the web version at [web.postman.com](https://web.postman.com/) (requires sign-in)
+
+2. **Import the Collection**
+   - Open Postman and sign in (required to use collections)
+   - Click **Import** button (top left)
+   - Select `Frugal_Fox_API.postman_collection.json` from the project root
+   - Collection will appear in your workspace sidebar
+
+3. **Start Testing**
+   - Ensure backend is running: `docker compose up --build`
+   - Run **Authentication → Register** to create an account (JWT token auto-saves)
+   - Use any expense endpoint - authentication is automatic!
+   - Optional: Run all requests in **Sample Data Setup** folder for test data
+
+**Collection Features:**
+- 🔐 Automatic JWT token management (no manual copying)
+- 📁 Organized folders: Authentication, CRUD, Search & Filters, Health Check, Sample Data
+- 📝 Pre-configured requests with realistic examples
+- 💡 Inline documentation for all parameters and validation rules
+- 🔄 Collection variables for easy environment switching
+
+**Note**: You must be signed in to Postman to import and use collections.
+
+### Option 2: cURL Commands
+
+For command-line testing, use cURL:
+
+#### Getting Started: Authentication
 
 All expense endpoints require JWT authentication via the `Authorization: Bearer <token>` header.
 
@@ -280,6 +313,55 @@ SPRING_DATASOURCE_PASSWORD=frugalfox
 jwt.secret=<256-bit-secret>
 jwt.expiration=86400000  # 24 hours in milliseconds
 ```
+
+## Working with AI Assistants (Claude Code)
+
+This project includes [CLAUDE.md](CLAUDE.md), a comprehensive instruction file that helps AI coding assistants understand the codebase and contribute effectively.
+
+### What is CLAUDE.md?
+
+`CLAUDE.md` is a project context file that provides AI assistants with:
+- **Project architecture** and structure
+- **Development guidelines** and coding conventions
+- **Security requirements** (critical for JWT authentication and user isolation)
+- **Common patterns** used throughout the codebase
+- **Anti-patterns** to avoid
+- **Testing requirements** and best practices
+
+### Using Claude Code Effectively
+
+When working with [Claude Code](https://claude.com/claude-code) or similar AI assistants:
+
+1. **Reference CLAUDE.md in your prompts**
+   ```
+   "Reference CLAUDE.md and add a new category filter endpoint"
+   "Following CLAUDE.md patterns, implement expense analytics"
+   ```
+
+2. **The AI automatically reads it** - Claude Code and compatible editors automatically load `CLAUDE.md` as project context, ensuring consistent, high-quality contributions
+
+3. **Key benefits:**
+   - ✅ Follows existing patterns (service-repository-controller)
+   - ✅ Enforces security requirements (user isolation, validation)
+   - ✅ Creates proper Flyway migrations for schema changes
+   - ✅ Writes tests following project conventions
+   - ✅ Uses correct naming conventions and package structure
+
+4. **Example tasks the AI can help with:**
+   - "Add expense categories endpoint with search"
+   - "Implement monthly spending analytics"
+   - "Add expense notes field with migration"
+   - "Create integration test for date filtering"
+
+### Maintaining CLAUDE.md
+
+When making significant architectural changes:
+- Update `CLAUDE.md` to reflect new patterns
+- Document new security requirements
+- Add examples of new conventions
+- Update the Postman collection reference if API changes
+
+This ensures future AI-assisted development remains consistent with your evolving codebase.
 
 ## Contributing
 

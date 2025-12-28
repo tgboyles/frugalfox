@@ -1,0 +1,695 @@
+{
+	"info": {
+		"_postman_id": "frugal-fox-api-collection",
+		"name": "Frugal Fox API",
+		"description": "JWT-authenticated expense tracking REST API with user isolation, advanced search, and comprehensive CRUD operations.\n\n**Stack**: Spring Boot 4.0.1 • PostgreSQL 17 • Spring Security • JWT\n\n**Base URL**: http://localhost:8080\n\n**Authentication**: All `/expenses/**` endpoints require JWT token in `Authorization: Bearer <token>` header.\n\n**Workflow**:\n1. Register or Login to get JWT token\n2. Token is automatically saved to collection variable\n3. Use expense endpoints with automatic authentication",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"jwt_token\", jsonData.token);",
+									"    pm.collectionVariables.set(\"username\", jsonData.username);",
+									"    console.log(\"JWT token saved:\", jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"password123\",\n  \"email\": \"testuser@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new user account. Returns a JWT token that is automatically saved to collection variables for use in subsequent requests.\n\n**Response**: `{\"token\": \"eyJ...\", \"username\": \"testuser\", \"email\": \"testuser@example.com\"}`"
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"jwt_token\", jsonData.token);",
+									"    pm.collectionVariables.set(\"username\", jsonData.username);",
+									"    console.log(\"JWT token saved:\", jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login with existing credentials. Returns a JWT token that is automatically saved to collection variables.\n\n**Response**: Same format as register endpoint."
+					},
+					"response": []
+				}
+			],
+			"description": "Public authentication endpoints for user registration and login. JWT tokens are automatically extracted and saved for authenticated requests."
+		},
+		{
+			"name": "Expenses - CRUD",
+			"item": [
+				{
+					"name": "Create Expense",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"expense_id\", jsonData.id);",
+									"    console.log(\"Expense ID saved:\", jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"date\": \"2025-12-26\",\n  \"merchant\": \"Whole Foods\",\n  \"amount\": 125.50,\n  \"bank\": \"Chase\",\n  \"category\": \"Groceries\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/expenses",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"expenses"
+							]
+						},
+						"description": "Create a new expense record.\n\n**Validation Rules**:\n- `date`: Must be in ISO 8601 format (YYYY-MM-DD), cannot be future date\n- `merchant`: Required, cannot be blank\n- `amount`: Must be positive number\n- `bank`: Required, cannot be blank\n- `category`: Required, cannot be blank\n\n**Response**: Created expense object with `id`, `createdAt`, and `updatedAt` fields."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Expense by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/expenses/{{expense_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"expenses",
+								"{{expense_id}}"
+							]
+						},
+						"description": "Retrieve a specific expense by ID. Users can only access their own expenses.\n\n**Returns**: `404 Not Found` if expense doesn't exist or belongs to another user."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Expense",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"date\": \"2025-12-26\",\n  \"merchant\": \"Whole Foods Market\",\n  \"amount\": 130.00,\n  \"bank\": \"Chase\",\n  \"category\": \"Groceries\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/expenses/{{expense_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"expenses",
+								"{{expense_id}}"
+							]
+						},
+						"description": "Update an existing expense. All fields are required (full replacement).\n\n**Returns**: Updated expense object with modified `updatedAt` timestamp.\n\n**Note**: Users can only update their own expenses."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Expense",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/expenses/{{expense_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"expenses",
+								"{{expense_id}}"
+							]
+						},
+						"description": "Delete an expense by ID.\n\n**Returns**: `204 No Content` on success.\n\n**Note**: Users can only delete their own expenses."
+					},
+					"response": []
+				}
+			],
+			"description": "Basic CRUD operations for expense management. All endpoints enforce user isolation - users can only access their own expenses."
+		},
+		{
+			"name": "Expenses - Search & Filter",
+			"item": [
+				{
+					"name": "List All Expenses",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/expenses",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"expenses"
+							]
+						},
+						"description": "List all expenses for the authenticated user.\n\n**Default Behavior**:\n- Paginated: 20 items per page\n- Sorted by date descending (newest first)\n\n**Response**: Paginated response with `content`, `totalElements`, `totalPages`, etc."
+					},
+					"response": []
+				},
+				{
+					"name": "List with Pagination",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/expenses?page=0&size=50&sort=amount,desc",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"expenses"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0",
+									"description": "0-indexed page number"
+								},
+								{
+									"key": "size",
+									"value": "50",
+									"description": "Number of items per page"
+								},
+								{
+									"key": "sort",
+									"value": "amount,desc",
+									"description": "Format: field,direction (asc or desc)"
+								}
+							]
+						},
+						"description": "List expenses with custom pagination and sorting.\n\n**Sort Options**: `date`, `amount`, `merchant`, `category`, `bank`, `createdAt`, `updatedAt`"
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Category",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/expenses?category=Groceries",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"expenses"
+							],
+							"query": [
+								{
+									"key": "category",
+									"value": "Groceries",
+									"description": "Exact match (case-sensitive)"
+								}
+							]
+						},
+						"description": "Filter expenses by category (exact match).\n\n**Example Categories**: Groceries, Dining, Transportation, Entertainment, Utilities, Healthcare, etc."
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Merchant (Partial Search)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/expenses?merchant=whole",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"expenses"
+							],
+							"query": [
+								{
+									"key": "merchant",
+									"value": "whole",
+									"description": "Partial, case-insensitive match"
+								}
+							]
+						},
+						"description": "Search expenses by merchant name (partial, case-insensitive).\n\n**Example**: `merchant=whole` matches \"Whole Foods\", \"Whole Foods Market\", etc."
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Date Range",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/expenses?startDate=2025-12-25&endDate=2025-12-26",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"expenses"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2025-12-25",
+									"description": "ISO 8601 format (YYYY-MM-DD), inclusive"
+								},
+								{
+									"key": "endDate",
+									"value": "2025-12-26",
+									"description": "ISO 8601 format (YYYY-MM-DD), inclusive"
+								}
+							]
+						},
+						"description": "Filter expenses by date range (inclusive).\n\n**Note**: Both parameters are optional - you can specify only `startDate` or only `endDate`."
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Amount Range",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/expenses?minAmount=50&maxAmount=100",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"expenses"
+							],
+							"query": [
+								{
+									"key": "minAmount",
+									"value": "50",
+									"description": "Minimum amount (inclusive)"
+								},
+								{
+									"key": "maxAmount",
+									"value": "100",
+									"description": "Maximum amount (inclusive)"
+								}
+							]
+						},
+						"description": "Filter expenses by amount range (inclusive).\n\n**Note**: Both parameters are optional - you can specify only `minAmount` or only `maxAmount`."
+					},
+					"response": []
+				},
+				{
+					"name": "Filter by Bank",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/expenses?bank=Chase",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"expenses"
+							],
+							"query": [
+								{
+									"key": "bank",
+									"value": "Chase",
+									"description": "Exact match (case-sensitive)"
+								}
+							]
+						},
+						"description": "Filter expenses by bank (exact match).\n\n**Example Banks**: Chase, Bank of America, Wells Fargo, Citi, etc."
+					},
+					"response": []
+				},
+				{
+					"name": "Combined Filters",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/expenses?category=Groceries&bank=Chase&minAmount=50&maxAmount=200&startDate=2025-01-01&endDate=2025-12-31&page=0&size=25&sort=date,desc",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"expenses"
+							],
+							"query": [
+								{
+									"key": "category",
+									"value": "Groceries"
+								},
+								{
+									"key": "bank",
+									"value": "Chase"
+								},
+								{
+									"key": "minAmount",
+									"value": "50"
+								},
+								{
+									"key": "maxAmount",
+									"value": "200"
+								},
+								{
+									"key": "startDate",
+									"value": "2025-01-01"
+								},
+								{
+									"key": "endDate",
+									"value": "2025-12-31"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "25"
+								},
+								{
+									"key": "sort",
+									"value": "date,desc"
+								}
+							]
+						},
+						"description": "Combine multiple filter criteria with custom pagination and sorting.\n\n**Note**: All query parameters are optional and can be combined in any combination."
+					},
+					"response": []
+				}
+			],
+			"description": "Advanced search and filtering capabilities with support for:\n- Pagination (page, size)\n- Sorting (field, direction)\n- Category filtering (exact)\n- Merchant search (partial, case-insensitive)\n- Date range filtering\n- Amount range filtering\n- Bank filtering (exact)\n\nAll filters can be combined for complex queries."
+		},
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Application Health",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/actuator/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"actuator",
+								"health"
+							]
+						},
+						"description": "Check application health status. Public endpoint (no authentication required).\n\n**Response**: `{\"status\": \"UP\"}`"
+					},
+					"response": []
+				}
+			],
+			"description": "System health monitoring endpoint."
+		},
+		{
+			"name": "Sample Data Setup",
+			"item": [
+				{
+					"name": "Create Sample Expense 1 (Groceries)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"date\": \"2025-12-26\",\n  \"merchant\": \"Whole Foods\",\n  \"amount\": 125.50,\n  \"bank\": \"Chase\",\n  \"category\": \"Groceries\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/expenses",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"expenses"
+							]
+						},
+						"description": "Create sample grocery expense"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Sample Expense 2 (Dining)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"date\": \"2025-12-25\",\n  \"merchant\": \"Chipotle Mexican Grill\",\n  \"amount\": 42.75,\n  \"bank\": \"Chase\",\n  \"category\": \"Dining\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/expenses",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"expenses"
+							]
+						},
+						"description": "Create sample dining expense"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Sample Expense 3 (Transportation)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"date\": \"2025-12-24\",\n  \"merchant\": \"Shell Gas Station\",\n  \"amount\": 65.00,\n  \"bank\": \"Bank of America\",\n  \"category\": \"Transportation\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/expenses",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"expenses"
+							]
+						},
+						"description": "Create sample transportation expense"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Sample Expense 4 (Entertainment)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"date\": \"2025-12-23\",\n  \"merchant\": \"AMC Theatres\",\n  \"amount\": 38.50,\n  \"bank\": \"Chase\",\n  \"category\": \"Entertainment\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/expenses",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"expenses"
+							]
+						},
+						"description": "Create sample entertainment expense"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Sample Expense 5 (Utilities)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"date\": \"2025-12-15\",\n  \"merchant\": \"Pacific Gas & Electric\",\n  \"amount\": 185.23,\n  \"bank\": \"Wells Fargo\",\n  \"category\": \"Utilities\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/expenses",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"expenses"
+							]
+						},
+						"description": "Create sample utilities expense"
+					},
+					"response": []
+				}
+			],
+			"description": "Quick setup folder with sample expenses for testing different categories, banks, and date ranges. Run these requests after registering/logging in to populate your account with test data."
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "username",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "expense_id",
+			"value": "1",
+			"type": "string"
+		}
+	]
+}
