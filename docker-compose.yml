@@ -35,6 +35,21 @@ services:
     networks:
       - frugalfox-network
 
+  mcp:
+    build:
+      context: ./mcp
+      dockerfile: Dockerfile
+    container_name: frugalfox-mcp
+    environment:
+      FRUGALFOX_API_BASE_URL: http://backend:8080
+      FRUGALFOX_API_TIMEOUT: 30000
+    ports:
+      - "8081:8081"
+    depends_on:
+      - backend
+    networks:
+      - frugalfox-network
+
 volumes:
   postgres_data:
 
