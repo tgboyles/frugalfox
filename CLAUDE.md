@@ -4,17 +4,31 @@ This document provides AI coding assistants with context about the Frugal Fox pr
 
 ## Project Overview
 
-Frugal Fox is a JWT-authenticated expense tracking REST API built with Spring Boot 4.0.1, PostgreSQL 17, and Spring Security. The application provides secure user registration, authentication, and multi-tenant expense management with advanced search capabilities.
+Frugal Fox is a full-stack expense tracking application with a JWT-authenticated REST API backend and a modern React frontend. The application provides secure user registration, authentication, and multi-tenant expense management with advanced search capabilities.
 
-**Key Technologies:**
+**Backend Technologies:**
 - Spring Boot 4.0.1 (Spring MVC, Spring Data JPA, Spring Security)
 - PostgreSQL 17 (production) / H2 (testing)
 - Flyway for database migrations
 - JWT authentication (jjwt 0.12.6)
 - Bean Validation for input validation
-- Docker & Docker Compose for deployment
 - Maven for build management
 - Java 23
+
+**Frontend Technologies:**
+- React 19 with TypeScript
+- Vite (build tool)
+- React Router v7 (routing)
+- TanStack Query v5 (server state management)
+- Axios (HTTP client)
+- shadcn/ui + Radix UI (component library)
+- Tailwind CSS v4 (styling)
+- Lucide React (icons)
+- pnpm (package manager)
+
+**Infrastructure:**
+- Docker & Docker Compose for deployment
+- CORS configured for frontend-backend communication
 
 ## Project Structure
 
@@ -32,13 +46,85 @@ frugal_fox/
 │   │   └── application.properties
 │   ├── src/test/                 # Unit and integration tests
 │   └── pom.xml
-├── docker-compose.yml            # PostgreSQL + Backend orchestration
-└── README.md                     # Full API documentation
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ui/               # shadcn/ui components
+│   │   │   ├── app-sidebar.tsx   # Application sidebar
+│   │   │   └── ProtectedRoute.tsx # Route protection wrapper
+│   │   ├── contexts/
+│   │   │   └── AuthContext.tsx   # Authentication context
+│   │   ├── pages/                # Page components
+│   │   ├── lib/
+│   │   │   ├── api.ts            # API client with axios
+│   │   │   └── utils.ts          # Utility functions
+│   │   ├── App.tsx               # Main app with routing
+│   │   └── index.css             # Global styles & theme
+│   ├── public/                   # Static assets (logo, etc.)
+│   ├── package.json
+│   └── vite.config.ts
+├── docker-compose.yml            # PostgreSQL + Backend + MCP orchestration
+├── README.md                     # Full API documentation
+└── CLAUDE.md                     # This file - project instructions for AI
 ```
 
 ## Development Guidelines
 
-### Code Style and Conventions
+### Frontend Code Style and Conventions
+
+1. **Technology Stack Standards**
+   - **ALWAYS use React 19** with TypeScript for all frontend development
+   - **ALWAYS use Vite** as the build tool (NOT Create React App or other bundlers)
+   - **ALWAYS use React Router v7** for routing (NOT reach-router or older versions)
+   - **ALWAYS use TanStack Query v5** for server state management (NOT Redux, Zustand, or other state libraries for server data)
+   - **ALWAYS use Axios** for HTTP requests (NOT fetch or other HTTP libraries)
+   - **ALWAYS use shadcn/ui + Radix UI** for UI components (NOT Material-UI, Ant Design, or other component libraries)
+   - **ALWAYS use Tailwind CSS v4** for styling (NOT CSS modules, styled-components, or other CSS solutions)
+   - **ALWAYS use Lucide React** for icons (NOT FontAwesome, Material Icons, or other icon libraries)
+   - **ALWAYS use pnpm** for package management (NOT npm or yarn)
+
+2. **Component Patterns**
+   - Use functional components with hooks (NO class components)
+   - Prefer named exports for contexts, utilities, and non-page components
+   - Use default exports for page components
+   - Follow PascalCase for component files (e.g., `AuthPage.tsx`, `DashboardLayout.tsx`)
+   - Use kebab-case for utility files (e.g., `api.ts`, `utils.ts`)
+
+3. **File Organization**
+   - Group by feature/type: `components/`, `pages/`, `contexts/`, `lib/`
+   - UI components from shadcn go in `components/ui/`
+   - Custom reusable components go in `components/`
+   - Page-level components go in `pages/`
+   - Context providers go in `contexts/`
+   - Utilities and API clients go in `lib/`
+
+4. **TypeScript Standards**
+   - Use strict mode TypeScript
+   - Properly type all component props, function parameters, and return values
+   - Use `type` for object shapes, `interface` for extensible contracts
+   - Import types with `type` keyword: `import { type ReactNode } from 'react'`
+   - Avoid `any` - use `unknown` or proper types
+
+5. **Styling with Tailwind**
+   - Use Tailwind utility classes directly in JSX
+   - Use the configured theme colors (primary, accent, etc.) from `index.css`
+   - Accent color: `oklch(0.67 0.16 58)` (vibrant orange/amber)
+   - Never write custom CSS unless absolutely necessary
+   - Use `cn()` utility from `lib/utils.ts` for conditional classes
+
+6. **State Management**
+   - Use TanStack Query for server state (data from API)
+   - Use React Context for global client state (auth, theme)
+   - Use local component state (`useState`) for UI-only state
+   - Example: See [AuthContext.tsx](frontend/src/contexts/AuthContext.tsx)
+
+7. **API Integration**
+   - All API calls go through centralized client in [lib/api.ts](frontend/src/lib/api.ts)
+   - Use axios interceptors for JWT token injection
+   - Use TanStack Query hooks for data fetching
+   - Handle errors consistently with try/catch and error states
+
+### Backend Code Style and Conventions
 
 1. **Follow Existing Patterns**
    - Use the existing service-repository-controller layering
@@ -160,6 +246,36 @@ frugal_fox/
 
 ### Development Workflow
 
+#### Frontend Development
+
+1. **Environment Setup**
+   - Install dependencies: `cd frontend && pnpm install`
+   - Copy environment file: `cp .env.example .env`
+   - Configure API URL in `.env`: `VITE_API_BASE_URL=http://localhost:8080`
+   - Start dev server: `pnpm dev` (runs on http://localhost:5173)
+
+2. **Making Changes**
+   - Read existing code before modifying
+   - Follow existing patterns in similar components
+   - Use shadcn components where possible: `pnpm dlx shadcn@latest add [component-name]`
+   - Test in browser after changes
+   - Build to verify no TypeScript errors: `pnpm build`
+
+3. **Adding New Pages**
+   - Create page component in `pages/` directory
+   - Add route in [App.tsx](frontend/src/App.tsx)
+   - Wrap with `<ProtectedRoute>` if authentication required
+   - Add navigation link in [app-sidebar.tsx](frontend/src/components/app-sidebar.tsx) if needed
+
+4. **Adding New Features**
+   - Create components in appropriate directory
+   - Add API methods to [lib/api.ts](frontend/src/lib/api.ts) if needed
+   - Use TanStack Query hooks for data fetching
+   - Add proper loading and error states
+   - Ensure responsive design with Tailwind breakpoints
+
+#### Backend Development
+
 1. **Environment Setup**
    - Prefer Docker Compose for full stack: `docker compose up --build`
    - Use database-only mode for local development: `docker compose up -d postgres`
@@ -185,6 +301,7 @@ frugal_fox/
    - Add tests for all layers
    - Update README.md API documentation if adding public endpoints
    - Update Postman collection json for any relevant new changes
+   - Update frontend API client in [lib/api.ts](frontend/src/lib/api.ts)
 
 ### Configuration Management
 
@@ -252,16 +369,27 @@ frugal_fox/
 ### Useful Commands Reference
 
 ```bash
-# Build and test
+# Frontend
+cd frontend
+pnpm install                   # Install dependencies
+pnpm dev                       # Start dev server (http://localhost:5173)
+pnpm build                     # Build for production
+pnpm preview                   # Preview production build
+pnpm dlx shadcn@latest add [component]  # Add shadcn component
+
+# Backend
+cd backend
 mvn clean package              # Full build with tests
 mvn clean package -DskipTests  # Build without tests
 mvn test                       # Run all tests
 mvn test -Dtest=ClassName      # Run specific test
+mvn spring-boot:run            # Run backend locally
 
-# Docker
+# Docker (from project root)
 docker compose up --build                            # Start all services
 docker compose down -v                               # Stop and remove volumes
 docker compose logs -f backend                       # View backend logs
+docker compose logs -f frontend                      # View frontend logs (if containerized)
 docker compose up -d postgres                        # Database only
 docker compose down && docker compose up --build --force-recreate  # Full rebuild
 
@@ -269,24 +397,39 @@ docker compose down && docker compose up --build --force-recreate  # Full rebuil
 docker exec -it frugalfox-postgres psql -U frugalfox -d frugalfox  # Access PostgreSQL
 
 # Health checks
-curl http://localhost:8080/actuator/health  # Application health
+curl http://localhost:8080/actuator/health  # Backend health
+curl http://localhost:5173                  # Frontend (dev mode)
 ```
 
 ### When to Ask for Clarification
 
 Ask the user before:
 - Making breaking changes to existing APIs
-- Adding new dependencies to pom.xml
+- Adding new dependencies to pom.xml or package.json
 - Modifying security configurations
 - Changing database schema in ways that affect existing data
 - Adding new public endpoints
 - Implementing features with multiple valid approaches
+- Changing the UI component library or styling approach
+- Switching to different state management solutions
 
 ### References
 
+**Backend:**
 - Full API documentation and examples: [README.md](README.md)
 - Spring Boot reference: https://docs.spring.io/spring-boot/reference/
 - Spring Security: https://docs.spring.io/spring-security/reference/
 - Spring Data JPA: https://docs.spring.io/spring-data/jpa/reference/
 - Flyway: https://documentation.red-gate.com/flyway
-- Google Java Style Guide: https://google.github.io/styleguide/javaguide.html 
+- Google Java Style Guide: https://google.github.io/styleguide/javaguide.html
+
+**Frontend:**
+- Frontend documentation: [frontend/README.md](frontend/README.md)
+- React documentation: https://react.dev
+- TypeScript documentation: https://www.typescriptlang.org/docs/
+- Vite documentation: https://vitejs.dev
+- React Router v7: https://reactrouter.com
+- TanStack Query: https://tanstack.com/query/latest
+- shadcn/ui: https://ui.shadcn.com
+- Tailwind CSS v4: https://tailwindcss.com
+- Radix UI: https://www.radix-ui.com 
