@@ -27,9 +27,9 @@ Frugal Fox is a demonstrative budgeting app that leverages Java, Spring Boot, an
 
 Start the full stack (PostgreSQL + Backend API + MCP Server):
 
-\`\`\`bash
+```bash
 docker compose up --build
-\`\`\`
+```
 
 This starts:
 - **PostgreSQL database** on port 5432
@@ -37,10 +37,10 @@ This starts:
 - **Frugal Fox MCP server** on port 8081
 
 Health checks:
-\`\`\`bash
+```bash
 curl http://localhost:8080/actuator/health  # Backend API
 curl http://localhost:8081/actuator/health  # MCP Server
-\`\`\`
+```
 
 ## API Usage
 
@@ -57,11 +57,11 @@ The easiest way to explore and test the API is using the included Postman collec
 2. **Import the Collection**
    - Open Postman and sign in (required to use collections)
    - Click **Import** button (top left)
-   - Select \`backend/postman_collection.json\` from the project root
+   - Select `backend/postman_collection.json` from the project root
    - Collection will appear in your workspace sidebar
 
 3. **Start Testing**
-   - Ensure backend is running: \`docker compose up --build\`
+   - Ensure backend is running: `docker compose up --build`
    - Run **Authentication → Register** to create an account (JWT token auto-saves)
    - Use any expense endpoint - authentication is automatic!
    - Optional: Run all requests in **Sample Data Setup** folder for test data
@@ -81,9 +81,9 @@ For command-line testing, use cURL:
 
 #### Getting Started: Authentication
 
-All expense endpoints require JWT authentication via the \`Authorization: Bearer <token>\` header.
+All expense endpoints require JWT authentication via the `Authorization: Bearer <token>` header.
 
-\`\`\`bash
+```bash
 # 1. Register
 curl -X POST http://localhost:8080/auth/register \\
   -H "Content-Type: application/json" \\
@@ -94,73 +94,73 @@ curl -X POST http://localhost:8080/auth/register \\
 export TOKEN="eyJ..."
 
 # 3. Use it for all expense operations
-curl http://localhost:8080/expenses -H "Authorization: Bearer \$TOKEN"
-\`\`\`
+curl http://localhost:8080/expenses -H "Authorization: Bearer $TOKEN"
+```
 
-Login endpoint: \`POST /auth/login\` (same request/response format as register)
+Login endpoint: `POST /auth/login` (same request/response format as register)
 
 #### Expense Operations
 
 **CRUD:**
-\`\`\`bash
+```bash
 # Create
 curl -X POST http://localhost:8080/expenses \\
-  -H "Authorization: Bearer \$TOKEN" \\
+  -H "Authorization: Bearer $TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"date": "2025-12-26", "merchant": "Whole Foods", "amount": 125.50, "bank": "Chase", "category": "Groceries"}'
 
 # Read (by ID)
-curl http://localhost:8080/expenses/1 -H "Authorization: Bearer \$TOKEN"
+curl http://localhost:8080/expenses/1 -H "Authorization: Bearer $TOKEN"
 
 # Update
 curl -X PUT http://localhost:8080/expenses/1 \\
-  -H "Authorization: Bearer \$TOKEN" \\
+  -H "Authorization: Bearer $TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"date": "2025-12-26", "merchant": "Whole Foods Market", "amount": 130.00, "bank": "Chase", "category": "Groceries"}'
 
 # Delete (returns 204 No Content)
-curl -X DELETE http://localhost:8080/expenses/1 -H "Authorization: Bearer \$TOKEN"
-\`\`\`
+curl -X DELETE http://localhost:8080/expenses/1 -H "Authorization: Bearer $TOKEN"
+```
 
 **Search & Filter:**
-\`\`\`bash
+```bash
 # List all (paginated, default 20/page, sorted by date desc)
-curl "http://localhost:8080/expenses" -H "Authorization: Bearer \$TOKEN"
+curl "http://localhost:8080/expenses" -H "Authorization: Bearer $TOKEN"
 
 # Filter by category (exact match)
-curl "http://localhost:8080/expenses?category=Groceries" -H "Authorization: Bearer \$TOKEN"
+curl "http://localhost:8080/expenses?category=Groceries" -H "Authorization: Bearer $TOKEN"
 
 # Filter by merchant (partial, case-insensitive)
-curl "http://localhost:8080/expenses?merchant=whole" -H "Authorization: Bearer \$TOKEN"
+curl "http://localhost:8080/expenses?merchant=whole" -H "Authorization: Bearer $TOKEN"
 
 # Filter by date range
-curl "http://localhost:8080/expenses?startDate=2025-01-01&endDate=2025-12-31" -H "Authorization: Bearer \$TOKEN"
+curl "http://localhost:8080/expenses?startDate=2025-01-01&endDate=2025-12-31" -H "Authorization: Bearer $TOKEN"
 
 # Filter by amount range
-curl "http://localhost:8080/expenses?minAmount=50&maxAmount=200" -H "Authorization: Bearer \$TOKEN"
+curl "http://localhost:8080/expenses?minAmount=50&maxAmount=200" -H "Authorization: Bearer $TOKEN"
 
 # Combine filters with custom pagination
-curl "http://localhost:8080/expenses?category=Groceries&bank=Chase&page=0&size=50&sort=amount,desc" -H "Authorization: Bearer \$TOKEN"
-\`\`\`
+curl "http://localhost:8080/expenses?category=Groceries&bank=Chase&page=0&size=50&sort=amount,desc" -H "Authorization: Bearer $TOKEN"
+```
 
 **Available Query Parameters:**
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| \`category\` | string | Exact match |
-| \`bank\` | string | Exact match |
-| \`merchant\` | string | Partial, case-insensitive |
-| \`startDate\` | date | ISO 8601 (YYYY-MM-DD) |
-| \`endDate\` | date | ISO 8601 (YYYY-MM-DD) |
-| \`minAmount\` | decimal | Inclusive |
-| \`maxAmount\` | decimal | Inclusive |
-| \`page\` | int | 0-indexed (default: 0) |
-| \`size\` | int | Default: 20 |
-| \`sort\` | string | Format: \`field,direction\` (e.g., \`date,desc\`) |
+| `category` | string | Exact match |
+| `bank` | string | Exact match |
+| `merchant` | string | Partial, case-insensitive |
+| `startDate` | date | ISO 8601 (YYYY-MM-DD) |
+| `endDate` | date | ISO 8601 (YYYY-MM-DD) |
+| `minAmount` | decimal | Inclusive |
+| `maxAmount` | decimal | Inclusive |
+| `page` | int | 0-indexed (default: 0) |
+| `size` | int | Default: 20 |
+| `sort` | string | Format: `field,direction` (e.g., `date,desc`) |
 
 #### Response Formats
 
 **Success Response (Expense):**
-\`\`\`json
+```json
 {
   "id": 1,
   "date": "2025-12-26",
@@ -171,10 +171,10 @@ curl "http://localhost:8080/expenses?category=Groceries&bank=Chase&page=0&size=5
   "createdAt": "2025-12-26T10:30:00",
   "updatedAt": "2025-12-26T10:30:00"
 }
-\`\`\`
+```
 
 **Paginated Response:**
-\`\`\`json
+```json
 {
   "content": [/* array of expense objects */],
   "pageable": {"pageNumber": 0, "pageSize": 20},
@@ -183,10 +183,10 @@ curl "http://localhost:8080/expenses?category=Groceries&bank=Chase&page=0&size=5
   "first": true,
   "last": false
 }
-\`\`\`
+```
 
 **Error Response:**
-\`\`\`json
+```json
 {
   "timestamp": "2025-12-26T10:30:00",
   "status": 400,
@@ -194,9 +194,9 @@ curl "http://localhost:8080/expenses?category=Groceries&bank=Chase&page=0&size=5
   "message": "Validation failed",
   "errors": [{"field": "amount", "message": "must be greater than zero"}]
 }
-\`\`\`
+```
 
-Common error codes: \`400\` (validation), \`401\` (invalid credentials), \`403\` (missing/invalid token), \`404\` (not found)
+Common error codes: `400` (validation), `401` (invalid credentials), `403` (missing/invalid token), `404` (not found)
 
 ## MCP Server
 
@@ -214,21 +214,21 @@ The Frugal Fox MCP (Model Context Protocol) server provides programmatic access 
 
 The MCP server is included in the main Docker Compose stack:
 
-\`\`\`bash
+```bash
 docker compose up --build
-\`\`\`
+```
 
-The MCP server will be available at \`http://localhost:8081/sse\`
+The MCP server will be available at `http://localhost:8081/sse`
 
 **For local development:**
-\`\`\`bash
+```bash
 cd mcp
 mvn clean package
 java -jar target/frugalfoxmcp-0.0.1-SNAPSHOT.jar
-\`\`\`
+```
 
 **Configuration:**
-\`\`\`properties
+```properties
 # mcp/src/main/resources/application.properties
 server.port=8081
 spring.ai.mcp.server.type=SYNC
@@ -236,13 +236,13 @@ spring.ai.mcp.server.name=frugalfoxmcp
 spring.ai.mcp.server.version=1.0.0
 spring.ai.mcp.server.protocol=sse
 
-frugalfox.api.base-url=\${FRUGALFOX_API_BASE_URL:http://localhost:8080}
-frugalfox.api.timeout=\${FRUGALFOX_API_TIMEOUT:30000}
-\`\`\`
+frugalfox.api.base-url=${FRUGALFOX_API_BASE_URL:http://localhost:8080}
+frugalfox.api.timeout=${FRUGALFOX_API_TIMEOUT:30000}
+```
 
 **Environment Variables:**
-- \`FRUGALFOX_API_BASE_URL\`: URL of the backend API (default: \`http://localhost:8080\`)
-- \`FRUGALFOX_API_TIMEOUT\`: HTTP client timeout in milliseconds (default: \`30000\`)
+- `FRUGALFOX_API_BASE_URL`: URL of the backend API (default: `http://localhost:8080`)
+- `FRUGALFOX_API_TIMEOUT`: HTTP client timeout in milliseconds (default: `30000`)
 
 ### Available MCP Tools
 
@@ -250,70 +250,70 @@ The MCP server provides 9 tools:
 
 #### Authentication Tools
 
-**\`registerUser\`** - Register a new user account
-- Parameters: \`username\`, \`password\`, \`email\`
-- Returns: \`{success, token, username, email}\`
+**`registerUser`** - Register a new user account
+- Parameters: `username`, `password`, `email`
+- Returns: `{success, token, username, email}`
 
-**\`loginUser\`** - Login with existing credentials
-- Parameters: \`username\`, \`password\`
-- Returns: Same as \`registerUser\`
+**`loginUser`** - Login with existing credentials
+- Parameters: `username`, `password`
+- Returns: Same as `registerUser`
 
-**\`healthCheck\`** - Check if the Frugal Fox API is healthy
-- Returns: \`{success, status}\`
+**`healthCheck`** - Check if the Frugal Fox API is healthy
+- Returns: `{success, status}`
 
 #### Expense Management Tools
 
-**\`createExpense\`** - Create a new expense
-- Parameters: \`token\`, \`date\`, \`merchant\`, \`amount\`, \`bank\`, \`category\`
-- Returns: \`{success, expense}\`
+**`createExpense`** - Create a new expense
+- Parameters: `token`, `date`, `merchant`, `amount`, `bank`, `category`
+- Returns: `{success, expense}`
 
-**\`getExpense\`** - Get a specific expense by ID
-- Parameters: \`token\`, \`id\`
-- Returns: \`{success, expense}\`
+**`getExpense`** - Get a specific expense by ID
+- Parameters: `token`, `id`
+- Returns: `{success, expense}`
 
-**\`updateExpense\`** - Update an existing expense
-- Parameters: \`token\`, \`id\`, \`date\`, \`merchant\`, \`amount\`, \`bank\`, \`category\`
-- Returns: \`{success, expense}\`
+**`updateExpense`** - Update an existing expense
+- Parameters: `token`, `id`, `date`, `merchant`, `amount`, `bank`, `category`
+- Returns: `{success, expense}`
 
-**\`deleteExpense\`** - Delete an expense
-- Parameters: \`token\`, \`id\`
-- Returns: \`{success, message}\`
+**`deleteExpense`** - Delete an expense
+- Parameters: `token`, `id`
+- Returns: `{success, message}`
 
 #### Search and Filter Tools
 
-**\`searchExpenses\`** - Search and filter expenses with pagination
-- Parameters: \`token\`, \`category\`, \`bank\`, \`merchant\`, \`startDate\`, \`endDate\`, \`minAmount\`, \`maxAmount\`, \`page\`, \`size\`, \`sort\`
-- Returns: \`{success, data}\` with paginated results
+**`searchExpenses`** - Search and filter expenses with pagination
+- Parameters: `token`, `category`, `bank`, `merchant`, `startDate`, `endDate`, `minAmount`, `maxAmount`, `page`, `size`, `sort`
+- Returns: `{success, data}` with paginated results
 
-**\`listAllExpenses\`** - List all expenses with pagination
-- Parameters: \`token\`, \`page\`, \`size\`
-- Returns: Same as \`searchExpenses\`
+**`listAllExpenses`** - List all expenses with pagination
+- Parameters: `token`, `page`, `size`
+- Returns: Same as `searchExpenses`
 
 ### Configuring Claude Desktop
 
 #### Step 1: Start the MCP Server
 
-\`\`\`bash
+```bash
 docker compose up mcp
-\`\`\`
+```
 
-The server will be available at \`http://localhost:8081/sse\`
+The server will be available at `http://localhost:8081/sse`
 
 #### Step 2: Ensure Node.js is Installed
 
-The \`mcp-remote\` bridge requires Node.js:
+The `mcp-remote` bridge requires Node.js:
 
-\`\`\`bash
+```bash
 node --version
-\`\`\`
+```
 
 If not installed, download from [nodejs.org](https://nodejs.org/)
 
 #### Step 3: Configure Claude Desktop
 
-Edit \`claude_desktop_config.json\`:
+Edit `claude_desktop_config.json`:
 
-\`\`\`json
+```json
 {
   "mcpServers": {
     "frugalfox": {
@@ -325,17 +325,17 @@ Edit \`claude_desktop_config.json\`:
     }
   }
 }
-\`\`\`
+```
 
 **Configuration file locations:**
-- **macOS:** \`~/Library/Application Support/Claude/claude_desktop_config.json\`
-- **Windows:** \`%APPDATA%\\Claude\\claude_desktop_config.json\`
-- **Linux:** \`~/.config/Claude/claude_desktop_config.json\`
+- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows:** `%APPDATA%\\Claude\\claude_desktop_config.json`
+- **Linux:** `~/.config/Claude/claude_desktop_config.json`
 
 **How it works:**
-- \`npx mcp-remote\` acts as a bridge between Claude Desktop (STDIO) and the SSE web service
+- `npx mcp-remote` acts as a bridge between Claude Desktop (STDIO) and the SSE web service
 - Allows the MCP server to run as a containerized service
-- Bridge automatically installs on first use via \`npx\`
+- Bridge automatically installs on first use via `npx`
 
 #### Step 4: Restart Claude Desktop
 
@@ -346,29 +346,29 @@ Edit \`claude_desktop_config.json\`:
 #### Verification
 
 In Claude Desktop, start a new conversation and ask:
-\`\`\`
+```
 Can you check if the Frugal Fox API is healthy?
-\`\`\`
+```
 
-Claude should use the \`healthCheck\` tool and report the API status.
+Claude should use the `healthCheck` tool and report the API status.
 
 #### Troubleshooting
 
 **MCP Server not starting:**
-- Check logs: \`docker compose logs mcp\` or \`tail -f ~/.frugalfoxmcp/logs/frugalfoxmcp.log\`
-- Verify Java version: \`java -version\` (must be 25+)
-- Ensure port 8081 is available: \`lsof -i :8081\`
+- Check logs: `docker compose logs mcp` or `tail -f ~/.frugalfoxmcp/logs/frugalfoxmcp.log`
+- Verify Java version: `java -version` (must be 25+)
+- Ensure port 8081 is available: `lsof -i :8081`
 
 **Claude Desktop connection issues:**
-- Verify MCP server is running: \`curl http://localhost:8081/actuator/health\`
-- Ensure Node.js is installed: \`node --version\`
+- Verify MCP server is running: `curl http://localhost:8081/actuator/health`
+- Ensure Node.js is installed: `node --version`
 - Check Claude Desktop logs (View → Developer → Developer Tools)
-- Verify config uses \`npx mcp-remote http://localhost:8081/sse\`
-- Test SSE endpoint: \`curl http://localhost:8081/sse\` (should hang, indicating connection)
+- Verify config uses `npx mcp-remote http://localhost:8081/sse`
+- Test SSE endpoint: `curl http://localhost:8081/sse` (should hang, indicating connection)
 
 **Tools not appearing:**
 - Check MCP server logs for "Registered tools: 9"
-- Rebuild and restart: \`docker compose up --build mcp\`
+- Rebuild and restart: `docker compose up --build mcp`
 
 ### Other MCP Clients
 
@@ -381,9 +381,9 @@ The MCP server works with any MCP-compatible client:
 - Custom applications using MCP SDKs
 
 For STDIO-based clients, configure them to execute:
-\`\`\`bash
+```bash
 java -jar /path/to/frugal_fox/mcp/target/frugalfoxmcp-0.0.1-SNAPSHOT.jar
-\`\`\`
+```
 
 Refer to your client's documentation for specific configuration steps.
 
@@ -391,25 +391,25 @@ Refer to your client's documentation for specific configuration steps.
 
 Here's a typical workflow:
 
-1. **Register:** \`registerUser(username="alice", password="secure123", email="alice@example.com")\`
-   - Returns token: \`"eyJhbGc..."\`
+1. **Register:** `registerUser(username="alice", password="secure123", email="alice@example.com")`
+   - Returns token: `"eyJhbGc..."`
 
-2. **Create expense:** \`createExpense(token="eyJhbGc...", date="2025-12-28", merchant="Starbucks", amount="5.50", bank="Chase", category="Dining")\`
+2. **Create expense:** `createExpense(token="eyJhbGc...", date="2025-12-28", merchant="Starbucks", amount="5.50", bank="Chase", category="Dining")`
    - Returns expense with id=1
 
-3. **Search:** \`searchExpenses(token="eyJhbGc...", category="Dining", startDate="2025-12-01", endDate="2025-12-31")\`
+3. **Search:** `searchExpenses(token="eyJhbGc...", category="Dining", startDate="2025-12-01", endDate="2025-12-31")`
    - Returns paginated dining expenses
 
-4. **Update:** \`updateExpense(token="eyJhbGc...", id=1, date="2025-12-28", merchant="Starbucks Coffee", amount="6.00", bank="Chase", category="Dining")\`
+4. **Update:** `updateExpense(token="eyJhbGc...", id=1, date="2025-12-28", merchant="Starbucks Coffee", amount="6.00", bank="Chase", category="Dining")`
 
-5. **Delete:** \`deleteExpense(token="eyJhbGc...", id=1)\`
+5. **Delete:** `deleteExpense(token="eyJhbGc...", id=1)`
 
 ## Development
 
 ### Development Workflows
 
 #### Docker (Recommended)
-\`\`\`bash
+```bash
 # Full rebuild
 docker compose down && docker compose up --build --force-recreate
 
@@ -422,10 +422,10 @@ docker compose up -d postgres
 
 # Teardown with data removal
 docker compose down -v
-\`\`\`
+```
 
 #### Local Maven (Backend)
-\`\`\`bash
+```bash
 cd backend
 
 # Build & test
@@ -440,10 +440,10 @@ mvn test -Dtest=ExpenseControllerTest
 
 # Run locally (requires Postgres on localhost:5432)
 mvn spring-boot:run
-\`\`\`
+```
 
 #### Local Maven (MCP Server)
-\`\`\`bash
+```bash
 cd mcp
 
 # Build
@@ -455,14 +455,14 @@ java -jar target/frugalfoxmcp-0.0.1-SNAPSHOT.jar
 # With custom config
 FRUGALFOX_API_BASE_URL=http://localhost:8080 \\
 java -jar target/frugalfoxmcp-0.0.1-SNAPSHOT.jar
-\`\`\`
+```
 
 ### Architecture
 
 #### Codebase Structure
 
-**Backend (\`backend/src/main/java/com/tgboyles/frugalfox/\`):**
-\`\`\`
+**Backend (`backend/src/main/java/com/tgboyles/frugalfox/`):**
+```
 ├── expense/                 # Core domain: expense tracking
 │   ├── Expense.java         # Entity with validation (@NotNull, @Positive, @PastOrPresent)
 │   ├── ExpenseController.java       # REST endpoints (CRUD + search)
@@ -486,10 +486,10 @@ java -jar target/frugalfoxmcp-0.0.1-SNAPSHOT.jar
 └── common/                  # Cross-cutting concerns
     ├── ErrorResponse.java           # Standardized error DTO
     └── GlobalExceptionHandler.java  # @ControllerAdvice for consistent error handling
-\`\`\`
+```
 
-**MCP Server (\`mcp/src/main/java/com/tgboyles/frugalfoxmcp/\`):**
-\`\`\`
+**MCP Server (`mcp/src/main/java/com/tgboyles/frugalfoxmcp/`):**
+```
 ├── config/
 │   ├── FrugalFoxApiConfig.java      # API configuration
 │   └── McpToolsConfig.java          # MCP tool definitions (@McpTool)
@@ -497,14 +497,14 @@ java -jar target/frugalfoxmcp-0.0.1-SNAPSHOT.jar
 ├── service/
 │   └── FrugalFoxApiClient.java      # HTTP client for API
 └── FrugalfoxmcpApplication.java     # Main application
-\`\`\`
+```
 
 #### Database Schema
 
-Managed by Flyway migrations in \`backend/src/main/resources/db/migration/\`
+Managed by Flyway migrations in `backend/src/main/resources/db/migration/`
 
 **V1__create_users_table.sql:**
-\`\`\`sql
+```sql
 users (
   id BIGSERIAL PRIMARY KEY,
   username VARCHAR(50) UNIQUE NOT NULL,
@@ -513,10 +513,10 @@ users (
   enabled BOOLEAN DEFAULT true,
   created_at, updated_at TIMESTAMP
 )
-\`\`\`
+```
 
 **V2__create_expenses_table.sql:**
-\`\`\`sql
+```sql
 expenses (
   id BIGSERIAL PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -528,24 +528,24 @@ expenses (
   created_at, updated_at TIMESTAMP
 )
 -- Indexes: user_id, (user_id, expense_date DESC), (user_id, category), merchant
-\`\`\`
+```
 
 #### Security Model
 
-- **Authentication**: JWT tokens (HS512, 24hr expiration configurable via \`jwt.expiration\`)
+- **Authentication**: JWT tokens (HS512, 24hr expiration configurable via `jwt.expiration`)
 - **Password Storage**: BCrypt with 10+ rounds
-- **User Isolation**: All expense queries automatically scoped to authenticated user via \`@AuthenticationPrincipal User\`
-- **Validation**: Bean Validation (\`@Valid\`) on all request bodies
+- **User Isolation**: All expense queries automatically scoped to authenticated user via `@AuthenticationPrincipal User`
+- **Validation**: Bean Validation (`@Valid`) on all request bodies
 - **CORS**: Configured in SecurityConfig (currently permissive for development)
-- **Public Endpoints**: \`/auth/**\`, \`/actuator/health\`, \`/\` (no authentication required)
+- **Public Endpoints**: `/auth/**`, `/actuator/health`, `/` (no authentication required)
 
 #### Key Design Patterns
 
 - **Repository Pattern**: Spring Data JPA repositories with custom specifications for dynamic queries
 - **DTO Pattern**: Separate request/response objects in security package
 - **Service Layer**: Business logic isolated from controllers
-- **Global Exception Handling**: Consistent error responses via \`@ControllerAdvice\`
-- **Lazy Loading**: \`@Lazy\` on PasswordEncoder to break circular dependency in SecurityConfig
+- **Global Exception Handling**: Consistent error responses via `@ControllerAdvice`
+- **Lazy Loading**: `@Lazy` on PasswordEncoder to break circular dependency in SecurityConfig
 - **User Scoping**: All expense operations filtered by authenticated user to prevent data leakage
 
 #### Technology Stack
@@ -566,21 +566,21 @@ expenses (
 ### Testing Strategy
 
 - **Unit Tests**: Service layer with Mockito
-- **Integration Tests**: Controller tests with \`@SpringBootTest\` + MockMvc
+- **Integration Tests**: Controller tests with `@SpringBootTest` + MockMvc
 - **Test Database**: H2 in-memory with PostgreSQL compatibility mode
 - **Flyway**: Enabled in test profile to validate migrations
 
-Run tests: \`mvn test\` (includes compilation → test → report generation)
+Run tests: `mvn test` (includes compilation → test → report generation)
 
 ### Configuration
 
 **Application Properties:**
-- \`backend/src/main/resources/application.properties\` - Production (PostgreSQL)
-- \`backend/src/test/resources/application.properties\` - Test (H2 + Flyway)
-- \`mcp/src/main/resources/application.properties\` - MCP Server
+- `backend/src/main/resources/application.properties` - Production (PostgreSQL)
+- `backend/src/test/resources/application.properties` - Test (H2 + Flyway)
+- `mcp/src/main/resources/application.properties` - MCP Server
 
 **Environment Variables (Docker):**
-\`\`\`bash
+```bash
 # Backend
 SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/frugalfox
 SPRING_DATASOURCE_USERNAME=frugalfox
@@ -589,13 +589,13 @@ SPRING_DATASOURCE_PASSWORD=frugalfox
 # MCP Server
 FRUGALFOX_API_BASE_URL=http://backend:8080
 FRUGALFOX_API_TIMEOUT=30000
-\`\`\`
+```
 
 **JWT Configuration (application.properties):**
-\`\`\`properties
+```properties
 jwt.secret=<256-bit-secret>
 jwt.expiration=86400000  # 24 hours in milliseconds
-\`\`\`
+```
 
 ## Working with AI Assistants (Claude Code)
 
@@ -603,7 +603,7 @@ This project includes [CLAUDE.md](CLAUDE.md), a comprehensive instruction file t
 
 ### What is CLAUDE.md?
 
-\`CLAUDE.md\` is a project context file that provides AI assistants with:
+`CLAUDE.md` is a project context file that provides AI assistants with:
 - **Project architecture** and structure
 - **Development guidelines** and coding conventions
 - **Security requirements** (critical for JWT authentication and user isolation)
@@ -616,12 +616,12 @@ This project includes [CLAUDE.md](CLAUDE.md), a comprehensive instruction file t
 When working with [Claude Code](https://claude.com/claude-code) or similar AI assistants:
 
 1. **Reference CLAUDE.md in your prompts**
-   \`\`\`
+   ```
    "Reference CLAUDE.md and add a new category filter endpoint"
    "Following CLAUDE.md patterns, implement expense analytics"
-   \`\`\`
+   ```
 
-2. **The AI automatically reads it** - Claude Code and compatible editors automatically load \`CLAUDE.md\` as project context, ensuring consistent, high-quality contributions
+2. **The AI automatically reads it** - Claude Code and compatible editors automatically load `CLAUDE.md` as project context, ensuring consistent, high-quality contributions
 
 3. **Key benefits:**
    - ✅ Follows existing patterns (service-repository-controller)
@@ -639,7 +639,7 @@ When working with [Claude Code](https://claude.com/claude-code) or similar AI as
 ### Maintaining CLAUDE.md
 
 When making significant architectural changes:
-- Update \`CLAUDE.md\` to reflect new patterns
+- Update `CLAUDE.md` to reflect new patterns
 - Document new security requirements
 - Add examples of new conventions
 - Update the Postman collection reference if API changes
