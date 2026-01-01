@@ -152,6 +152,7 @@ The project uses TypeScript with strict mode enabled. All API responses and comp
 - Prefer named exports for pages and contexts
 - Use default exports for page components
 - Follow existing file naming conventions (PascalCase for components, kebab-case for utilities)
+- Always follow ESLint directives / config
 
 ## TODO
 

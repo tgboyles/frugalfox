@@ -2,6 +2,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { expenseApi } from '@/lib/api';
+import { type Expense } from '@/lib/types';
 import { TrendingUp, TrendingDown, Receipt, DollarSign } from 'lucide-react';
 
 export default function DashboardHome() {
@@ -14,11 +15,11 @@ export default function DashboardHome() {
 
   // Calculate metrics
   const totalExpenses = expenses.reduce(
-    (sum: number, expense: any) => sum + expense.amount,
+    (sum: number, expense: Expense) => sum + expense.amount,
     0
   );
   const averageExpense = expenses.length > 0 ? totalExpenses / expenses.length : 0;
-  const categoryCount = new Set(expenses.map((e: any) => e.category)).size;
+  const categoryCount = new Set(expenses.map((e: Expense) => e.category)).size;
 
   return (
     <div className="space-y-6">
@@ -116,7 +117,7 @@ export default function DashboardHome() {
           <p className="text-muted-foreground">No expenses yet. Add your first expense to get started!</p>
         ) : (
           <div className="space-y-4">
-            {expenses.slice(0, 5).map((expense: any) => (
+            {expenses.slice(0, 5).map((expense: Expense) => (
               <div
                 key={expense.id}
                 className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"

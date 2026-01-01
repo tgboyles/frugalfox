@@ -57,6 +57,7 @@ frugal_fox/
 │   │   ├── pages/                # Page components
 │   │   ├── lib/
 │   │   │   ├── api.ts            # API client with axios
+│   │   │   ├── types.ts          # Reusable TypeScript types
 │   │   │   └── utils.ts          # Utility functions
 │   │   ├── App.tsx               # Main app with routing
 │   │   └── index.css             # Global styles & theme
@@ -96,7 +97,10 @@ frugal_fox/
    - Custom reusable components go in `components/`
    - Page-level components go in `pages/`
    - Context providers go in `contexts/`
-   - Utilities and API clients go in `lib/`
+   - Utilities, API clients, and reusable types go in `lib/`
+     - [lib/api.ts](frontend/src/lib/api.ts) - API client with axios
+     - [lib/types.ts](frontend/src/lib/types.ts) - Reusable TypeScript types
+     - [lib/utils.ts](frontend/src/lib/utils.ts) - Utility functions
 
 4. **TypeScript Standards**
    - Use strict mode TypeScript
@@ -104,6 +108,13 @@ frugal_fox/
    - Use `type` for object shapes, `interface` for extensible contracts
    - Import types with `type` keyword: `import { type ReactNode } from 'react'`
    - Avoid `any` - use `unknown` or proper types
+   - **ALWAYS define reusable types in [lib/types.ts](frontend/src/lib/types.ts)**
+     - API response types (e.g., `Expense`, `User`, `AuthResponse`)
+     - Common data structures shared across components
+     - Generic types like `PageableResponse<T>` for paginated API responses
+   - Never define types inline in components if they could be reused elsewhere
+   - Example: Instead of `expense: any`, use `expense: Expense` where `Expense` is imported from `lib/types.ts`
+   - See [DashboardHome.tsx](frontend/src/pages/DashboardHome.tsx) for proper type usage example
 
 5. **Styling with Tailwind**
    - Use Tailwind utility classes directly in JSX
