@@ -142,9 +142,9 @@ frugal_fox/
 
 Detailed documentation for each component:
 
-- **[Backend README](backend/README.md)** - How to build, test, and extend the Spring Boot API
-- **[Frontend README](frontend/README.md)** - React app architecture and development guide
-- **[MCP Server](#mcp-server/README.md)** - AI assistant integration (documented below)
+- **[Backend](backend/README.md)** - How to build, test, and extend the Spring Boot API
+- **[Frontend](frontend/README.md)** - React app architecture and development guide
+- **[MCP Server](mcp-server/README.md)** - AI assistant integration (documented below)
 - **[CLAUDE.md](CLAUDE.md)** - AI coding assistant integration guide
 
 ## License
