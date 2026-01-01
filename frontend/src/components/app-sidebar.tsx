@@ -58,7 +58,7 @@ export function AppSidebar() {
       <SidebarHeader>
         <div className="px-4 py-2 flex items-center gap-3">
           <img
-            src="/fox.jpg"
+            src="/fox.png"
             alt="Frugal Fox Logo"
             className="w-10 h-10 rounded-full object-cover"
           />

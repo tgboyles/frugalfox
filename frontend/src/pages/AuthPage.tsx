@@ -44,9 +44,9 @@ export default function AuthPage() {
       <div className="hidden lg:flex bg-primary text-primary-foreground p-12 flex-col justify-between">
         <div className="space-y-4">
           <img
-            src="/fox.jpg"
+            src="/fox.png"
             alt="Frugal Fox Logo"
-            className="w-24 h-24 rounded-full object-cover border-4 border-primary-foreground/20"
+            className="w-24 h-24 rounded-full object-cover bg-white p-2 border-4 border-primary-foreground/20"
           />
           <h1 className="text-3xl font-bold">Frugal Fox</h1>
         </div>
