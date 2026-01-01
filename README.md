@@ -1,4 +1,4 @@
-<img alt="image" src="frontend/public/fox.png" />
+<img width="300" height="300" alt="image" src="frontend/public/fox.png" />
 
 # Frugal Fox
 
