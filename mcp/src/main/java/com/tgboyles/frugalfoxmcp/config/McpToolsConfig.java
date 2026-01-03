@@ -3,7 +3,9 @@ package com.tgboyles.frugalfoxmcp.config;
 import com.tgboyles.frugalfoxmcp.dto.AuthResponse;
 import com.tgboyles.frugalfoxmcp.dto.ExpenseRequest;
 import com.tgboyles.frugalfoxmcp.dto.ExpenseResponse;
+import com.tgboyles.frugalfoxmcp.service.CredentialsHolder;
 import com.tgboyles.frugalfoxmcp.service.FrugalFoxApiClient;
+import com.tgboyles.frugalfoxmcp.service.TokenManager;
 import org.springaicommunity.mcp.annotation.McpTool;
 import org.springaicommunity.mcp.annotation.McpToolParam;
 import org.springframework.stereotype.Component;
@@ -17,9 +19,24 @@ import java.util.Map;
 public class McpToolsConfig {
 
     private final FrugalFoxApiClient apiClient;
+    private final TokenManager tokenManager;
+    private final CredentialsHolder credentialsHolder;
 
-    public McpToolsConfig(FrugalFoxApiClient apiClient) {
+    public McpToolsConfig(FrugalFoxApiClient apiClient, TokenManager tokenManager, CredentialsHolder credentialsHolder) {
         this.apiClient = apiClient;
+        this.tokenManager = tokenManager;
+        this.credentialsHolder = credentialsHolder;
+    }
+
+    /**
+     * Get a valid token, automatically refreshing if expired.
+     * Requires credentials to have been provided via SSE query parameters.
+     */
+    private String getValidToken() {
+        if (!credentialsHolder.hasCredentials()) {
+            throw new IllegalStateException("No credentials available. Please provide username and password in SSE connection URL.");
+        }
+        return tokenManager.getValidToken(credentialsHolder.getUsername(), credentialsHolder.getPassword());
     }
 
     @McpTool(name = "registerUser", description = "Register a new user account. Returns a JWT token that must be used for all subsequent expense operations.")
@@ -57,15 +74,15 @@ public class McpToolsConfig {
         }
     }
 
-    @McpTool(name = "createExpense", description = "Create a new expense. Requires JWT token. Date must be in ISO 8601 format (YYYY-MM-DD) and cannot be in the future. Amount must be positive.")
+    @McpTool(name = "createExpense", description = "Create a new expense. Automatically uses JWT token from credentials. Date must be in ISO 8601 format (YYYY-MM-DD) and cannot be in the future. Amount must be positive.")
     public Map<String, Object> createExpense(
-            @McpToolParam(description = "JWT token from authentication", required = true) String token,
             @McpToolParam(description = "Expense date in YYYY-MM-DD format", required = true) String date,
             @McpToolParam(description = "Merchant name", required = true) String merchant,
             @McpToolParam(description = "Expense amount (positive number)", required = true) String amount,
             @McpToolParam(description = "Bank name", required = true) String bank,
             @McpToolParam(description = "Expense category", required = true) String category) {
         try {
+            String token = getValidToken();
             ExpenseRequest expReq = new ExpenseRequest(
                 LocalDate.parse(date),
                 merchant,
@@ -80,11 +97,11 @@ public class McpToolsConfig {
         }
     }
 
-    @McpTool(name = "getExpense", description = "Get a specific expense by ID. Requires JWT token. Only returns expenses owned by the authenticated user.")
+    @McpTool(name = "getExpense", description = "Get a specific expense by ID. Automatically uses JWT token from credentials. Only returns expenses owned by the authenticated user.")
     public Map<String, Object> getExpense(
-            @McpToolParam(description = "JWT token from authentication", required = true) String token,
             @McpToolParam(description = "Expense ID", required = true) Long id) {
         try {
+            String token = getValidToken();
             ExpenseResponse response = apiClient.getExpense(token, id);
             return Map.of("success", true, "expense", buildExpenseMap(response));
         } catch (Exception e) {
@@ -92,9 +109,8 @@ public class McpToolsConfig {
         }
     }
 
-    @McpTool(name = "updateExpense", description = "Update an existing expense. Requires JWT token. All fields must be provided. Only updates expenses owned by the authenticated user.")
+    @McpTool(name = "updateExpense", description = "Update an existing expense. Automatically uses JWT token from credentials. All fields must be provided. Only updates expenses owned by the authenticated user.")
     public Map<String, Object> updateExpense(
-            @McpToolParam(description = "JWT token from authentication", required = true) String token,
             @McpToolParam(description = "Expense ID to update", required = true) Long id,
             @McpToolParam(description = "Expense date in YYYY-MM-DD format", required = true) String date,
             @McpToolParam(description = "Merchant name", required = true) String merchant,
@@ -102,6 +118,7 @@ public class McpToolsConfig {
             @McpToolParam(description = "Bank name", required = true) String bank,
             @McpToolParam(description = "Expense category", required = true) String category) {
         try {
+            String token = getValidToken();
             ExpenseRequest expReq = new ExpenseRequest(
                 LocalDate.parse(date),
                 merchant,
@@ -116,11 +133,11 @@ public class McpToolsConfig {
         }
     }
 
-    @McpTool(name = "deleteExpense", description = "Delete an expense by ID. Requires JWT token. Only deletes expenses owned by the authenticated user.")
+    @McpTool(name = "deleteExpense", description = "Delete an expense by ID. Automatically uses JWT token from credentials. Only deletes expenses owned by the authenticated user.")
     public Map<String, Object> deleteExpense(
-            @McpToolParam(description = "JWT token from authentication", required = true) String token,
             @McpToolParam(description = "Expense ID to delete", required = true) Long id) {
         try {
+            String token = getValidToken();
             apiClient.deleteExpense(token, id);
             return Map.of("success", true, "message", "Expense deleted successfully");
         } catch (Exception e) {
@@ -128,9 +145,8 @@ public class McpToolsConfig {
         }
     }
 
-    @McpTool(name = "searchExpenses", description = "Search and filter expenses with pagination. All filter parameters are optional. Returns paginated results (default 20 per page). Category and bank use exact match. Merchant uses partial, case-insensitive search.")
+    @McpTool(name = "searchExpenses", description = "Search and filter expenses with pagination. Automatically uses JWT token from credentials. All filter parameters are optional. Returns paginated results (default 20 per page). Category and bank use exact match. Merchant uses partial, case-insensitive search.")
     public Map<String, Object> searchExpenses(
-            @McpToolParam(description = "JWT token from authentication", required = true) String token,
             @McpToolParam(description = "Category to filter by (exact match)", required = false) String category,
             @McpToolParam(description = "Bank to filter by (exact match)", required = false) String bank,
             @McpToolParam(description = "Merchant to filter by (partial, case-insensitive)", required = false) String merchant,
@@ -142,6 +158,7 @@ public class McpToolsConfig {
             @McpToolParam(description = "Page size (default 20)", required = false) Integer size,
             @McpToolParam(description = "Sort field and direction (e.g., 'date,desc')", required = false) String sort) {
         try {
+            String token = getValidToken();
             LocalDate start = startDate != null ? LocalDate.parse(startDate) : null;
             LocalDate end = endDate != null ? LocalDate.parse(endDate) : null;
             BigDecimal min = minAmount != null ? new BigDecimal(minAmount) : null;
@@ -156,12 +173,12 @@ public class McpToolsConfig {
         }
     }
 
-    @McpTool(name = "listAllExpenses", description = "List all expenses for the authenticated user with pagination. Returns 20 expenses per page by default, sorted by date descending.")
+    @McpTool(name = "listAllExpenses", description = "List all expenses for the authenticated user with pagination. Automatically uses JWT token from credentials. Returns 20 expenses per page by default, sorted by date descending.")
     public Map<String, Object> listAllExpenses(
-            @McpToolParam(description = "JWT token from authentication", required = true) String token,
             @McpToolParam(description = "Page number (0-indexed)", required = false) Integer page,
             @McpToolParam(description = "Page size (default 20)", required = false) Integer size) {
         try {
+            String token = getValidToken();
             Map<String, Object> response = apiClient.searchExpenses(
                 token, null, null, null, null, null, null, null, page, size, null
             );

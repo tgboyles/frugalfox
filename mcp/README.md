@@ -7,6 +7,8 @@ Model Context Protocol (MCP) server providing AI assistant access to the Frugal 
 The Frugal Fox MCP server exposes the expense tracking API as a set of tools that can be used by AI assistants like Claude Desktop, Cline, Continue, Zed, and other MCP-compatible clients. It acts as a bridge between AI assistants and the Frugal Fox backend, enabling natural language interaction with expense data.
 
 **Key Features:**
+- **Automatic JWT token management** - Pass credentials once via SSE query parameters, tokens are managed automatically
+- **Token expiration handling** - Automatically refreshes expired tokens without user intervention
 - 9 MCP tools covering authentication, CRUD operations, and search
 - SSE (Server-Sent Events) transport for web-based deployment
 - Docker-ready for containerized deployment
@@ -108,21 +110,24 @@ mcp/
 │   ├── main/
 │   │   ├── java/com/tgboyles/frugalfoxmcp/
 │   │   │   ├── config/
-│   │   │   │   ├── FrugalFoxApiConfig.java    # API client configuration
-│   │   │   │   └── McpToolsConfig.java        # MCP tool definitions
+│   │   │   │   ├── FrugalFoxApiConfig.java       # API client configuration
+│   │   │   │   ├── McpToolsConfig.java           # MCP tool definitions
+│   │   │   │   └── SseCredentialsFilter.java     # Extracts credentials from SSE query params
 │   │   │   ├── dto/
-│   │   │   │   ├── ExpenseDto.java            # Expense data transfer object
-│   │   │   │   ├── AuthRequestDto.java        # Auth request DTO
-│   │   │   │   ├── AuthResponseDto.java       # Auth response DTO
-│   │   │   │   └── ...                        # Other DTOs
+│   │   │   │   ├── ExpenseDto.java               # Expense data transfer object
+│   │   │   │   ├── AuthRequestDto.java           # Auth request DTO
+│   │   │   │   ├── AuthResponseDto.java          # Auth response DTO
+│   │   │   │   └── ...                           # Other DTOs
 │   │   │   ├── service/
-│   │   │   │   └── FrugalFoxApiClient.java    # HTTP client for backend API
-│   │   │   └── FrugalfoxmcpApplication.java   # Main application class
+│   │   │   │   ├── FrugalFoxApiClient.java       # HTTP client for backend API
+│   │   │   │   ├── TokenManager.java             # JWT token lifecycle management
+│   │   │   │   └── CredentialsHolder.java        # Stores credentials from SSE connection
+│   │   │   └── FrugalfoxmcpApplication.java      # Main application class
 │   │   └── resources/
-│   │       └── application.properties         # Configuration
-│   └── test/                                   # Tests (if any)
-├── pom.xml                                     # Maven configuration
-└── README.md                                   # This file
+│   │       └── application.properties            # Configuration
+│   └── test/                                      # Tests (if any)
+├── pom.xml                                        # Maven configuration
+└── README.md                                      # This file
 ```
 
 ### Architectural Components
@@ -130,7 +135,25 @@ mcp/
 **MCP Tool Configuration** (`McpToolsConfig.java`):
 - Defines all 9 MCP tools using `@McpTool` annotations
 - Maps tool parameters to API client methods
+- Automatically obtains valid JWT tokens via TokenManager
 - Handles response formatting and error handling
+
+**Token Manager** (`TokenManager.java`):
+- Manages JWT token lifecycle (obtain, cache, refresh)
+- Parses JWT payload to check expiration timestamps
+- Automatically refreshes tokens within 60 seconds of expiration
+- Thread-safe in-memory token cache (ConcurrentHashMap)
+
+**Credentials Holder** (`CredentialsHolder.java`):
+- Stores user credentials provided via HTTP headers
+- Provides credentials to TokenManager for authentication
+- Thread-safe singleton service
+
+**SSE Credentials Filter** (`SseCredentialsFilter.java`):
+- Servlet filter that intercepts SSE endpoint requests
+- Extracts credentials from HTTP headers (`X-Frugalfox-Username`, `X-Frugalfox-Password`)
+- Stores credentials in CredentialsHolder for later use
+- Executes before MCP request processing
 
 **API Client** (`FrugalFoxApiClient.java`):
 - Reactive HTTP client using Spring WebFlux
@@ -187,9 +210,10 @@ PostgreSQL Database
 
 ### Expense Management Tools
 
+> **Note:** All expense tools automatically use JWT tokens when credentials are provided via SSE query parameters. No manual token passing required!
+
 **`createExpense`** - Create a new expense
 - **Parameters:**
-  - `token` (string, required) - JWT authentication token
   - `date` (string, required) - Expense date (ISO 8601: YYYY-MM-DD)
   - `merchant` (string, required) - Merchant name
   - `amount` (string, required) - Amount (decimal)
@@ -199,13 +223,11 @@ PostgreSQL Database
 
 **`getExpense`** - Get a specific expense by ID
 - **Parameters:**
-  - `token` (string, required) - JWT authentication token
   - `id` (string, required) - Expense ID
 - **Returns:** `{success: boolean, expense: object}`
 
 **`updateExpense`** - Update an existing expense
 - **Parameters:**
-  - `token` (string, required) - JWT authentication token
   - `id` (string, required) - Expense ID
   - `date` (string, required) - Expense date
   - `merchant` (string, required) - Merchant name
@@ -216,7 +238,6 @@ PostgreSQL Database
 
 **`deleteExpense`** - Delete an expense
 - **Parameters:**
-  - `token` (string, required) - JWT authentication token
   - `id` (string, required) - Expense ID
 - **Returns:** `{success: boolean, message: string}`
 
@@ -224,7 +245,6 @@ PostgreSQL Database
 
 **`searchExpenses`** - Search and filter expenses with pagination
 - **Parameters:**
-  - `token` (string, required) - JWT authentication token
   - `category` (string, optional) - Filter by category (exact match)
   - `bank` (string, optional) - Filter by bank (exact match)
   - `merchant` (string, optional) - Filter by merchant (partial, case-insensitive)
@@ -239,7 +259,6 @@ PostgreSQL Database
 
 **`listAllExpenses`** - List all expenses with pagination
 - **Parameters:**
-  - `token` (string, required) - JWT authentication token
   - `page` (string, optional) - Page number (default: 0)
   - `size` (string, optional) - Page size (default: 20)
 - **Returns:** `{success: boolean, data: object}` with paginated results
@@ -291,26 +310,64 @@ When running via Docker, the backend URL is automatically set to `http://backend
    - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
    - Linux: `~/.config/Claude/claude_desktop_config.json`
 
-   **Configuration:**
+   **Configuration with Automatic Token Management (Recommended):**
    ```json
    {
      "mcpServers": {
        "frugalfox": {
          "command": "npx",
-         "args": ["mcp-remote", "http://localhost:8081/sse"]
+         "args": [
+           "-y",
+           "mcp-remote",
+           "http://localhost:8081/sse",
+           "--header",
+           "X-Frugalfox-Username: ${FF_USERNAME}",
+           "--header",
+           "X-Frugalfox-Password: ${FF_PASSWORD}"
+         ],
+         "env": {
+           "FF_USERNAME": "your-username",
+           "FF_PASSWORD": "your-password"
+         }
        }
      }
    }
    ```
 
+   Replace `your-username` and `your-password` with your Frugal Fox credentials in the `env` section.
+
+   **Legacy Configuration (Manual Token Passing):**
+   ```json
+   {
+     "mcpServers": {
+       "frugalfox": {
+         "command": "npx",
+         "args": ["-y", "mcp-remote", "http://localhost:8081/sse"]
+       }
+     }
+   }
+   ```
+
+   With this configuration, you must manually pass JWT tokens to each tool.
+
 3. **Restart Claude Desktop**
 
-4. **Test:** Ask Claude "Can you check if the Frugal Fox API is healthy?"
+4. **Test:** Ask Claude "Can you list my expenses?" (with automatic tokens) or "Can you check if the Frugal Fox API is healthy?" (no auth required)
 
 **How it works:**
-- `npx mcp-remote` acts as a bridge between Claude Desktop (STDIO) and the MCP server (SSE)
-- This allows the MCP server to run as a containerized web service
-- The bridge automatically installs on first use via `npx`
+- **Automatic Token Management:** When you provide credentials via HTTP headers (`X-Frugalfox-Username` and `X-Frugalfox-Password`), the MCP server automatically:
+  - Captures your credentials from headers on SSE connection
+  - Logs in to obtain a JWT token
+  - Caches the token in memory
+  - Checks token expiration before each request
+  - Automatically refreshes expired tokens (within 60 seconds of expiration)
+  - Provides the valid token to all expense tools transparently
+- **Environment Variables:** Credentials are stored in the `env` section and referenced as `${FF_USERNAME}` and `${FF_PASSWORD}` in headers
+- **mcp-remote bridge:** Acts as a bridge between Claude Desktop (STDIO) and the MCP server (SSE), passing headers through
+- **Containerized deployment:** Allows the MCP server to run as a containerized web service
+- **Auto-install:** The bridge automatically installs on first use via `npx -y`
+
+**Security Note:** Credentials are passed via HTTP headers (more secure than query parameters). Environment variables keep credentials out of the configuration directly. For production deployments over networks, use HTTPS to encrypt credentials in transit.
 
 ### Cline, Continue, Zed (STDIO Clients)
 
@@ -349,7 +406,27 @@ java -jar target/frugalfoxmcp-0.0.1-SNAPSHOT.jar
 
 ## Usage Example
 
-Typical workflow with an AI assistant:
+Typical workflow with an AI assistant (with automatic token management):
+
+```
+User: "Add a $50 expense from Starbucks yesterday"
+AI: Uses createExpense(date="2025-12-31", merchant="Starbucks",
+                       amount="50.00", bank="Chase", category="Dining")
+    [Token automatically obtained and used behind the scenes]
+    Returns: {success: true, expense: {...}}
+
+User: "Show me all my dining expenses from December"
+AI: Uses searchExpenses(category="Dining", startDate="2025-12-01", endDate="2025-12-31")
+    [Token automatically refreshed if expired]
+    Returns: {success: true, data: {...}}
+
+User: "Delete expense ID 1"
+AI: Uses deleteExpense(id="1")
+    [Token automatically provided]
+    Returns: {success: true, message: "Expense deleted successfully"}
+```
+
+**Legacy workflow (without automatic token management):**
 
 ```
 User: "Register me as alice with email alice@example.com"
@@ -360,16 +437,9 @@ User: "Add a $50 expense from Starbucks yesterday"
 AI: Uses createExpense(token="eyJ...", date="2025-12-31", merchant="Starbucks",
                        amount="50.00", bank="Chase", category="Dining")
     Returns: {success: true, expense: {...}}
-
-User: "Show me all my dining expenses from December"
-AI: Uses searchExpenses(token="eyJ...", category="Dining",
-                        startDate="2025-12-01", endDate="2025-12-31")
-    Returns: {success: true, data: {...}}
-
-User: "Delete expense ID 1"
-AI: Uses deleteExpense(token="eyJ...", id="1")
-    Returns: {success: true, message: "Expense deleted successfully"}
 ```
+
+**Note:** With automatic token management enabled via SSE query parameters, users don't need to manually register or login - the server handles authentication transparently.
 
 ## Development Workflows
 
