@@ -29,18 +29,7 @@ public class FrugalFoxApiClient {
                 .build();
     }
 
-    // Authentication methods
-    public AuthResponse register(String username, String password, String email) {
-        RegisterRequest request = new RegisterRequest(username, password, email);
-        return webClient.post()
-                .uri("/auth/register")
-                .bodyValue(request)
-                .retrieve()
-                .bodyToMono(AuthResponse.class)
-                .timeout(Duration.ofMillis(config.getTimeout()))
-                .block();
-    }
-
+    // Authentication method (used internally by TokenManager for automatic token refresh)
     public AuthResponse login(String username, String password) {
         AuthRequest request = new AuthRequest(username, password);
         return webClient.post()

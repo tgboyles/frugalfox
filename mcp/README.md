@@ -7,9 +7,9 @@ Model Context Protocol (MCP) server providing AI assistant access to the Frugal 
 The Frugal Fox MCP server exposes the expense tracking API as a set of tools that can be used by AI assistants like Claude Desktop, Cline, Continue, Zed, and other MCP-compatible clients. It acts as a bridge between AI assistants and the Frugal Fox backend, enabling natural language interaction with expense data.
 
 **Key Features:**
-- **Automatic JWT token management** - Pass credentials once via SSE query parameters, tokens are managed automatically
+- **Automatic JWT token management** - Pass credentials once via configuration, tokens are managed automatically
 - **Token expiration handling** - Automatically refreshes expired tokens without user intervention
-- 9 MCP tools covering authentication, CRUD operations, and search
+- 7 MCP tools covering health checks, CRUD operations, and search
 - SSE (Server-Sent Events) transport for web-based deployment
 - Docker-ready for containerized deployment
 - Compatible with all major MCP clients (Claude Desktop, Cline, Continue, Zed)
@@ -189,28 +189,15 @@ PostgreSQL Database
 
 ## Available MCP Tools
 
-### Authentication Tools
+All expense tools automatically use JWT tokens when credentials are provided via configuration. No manual token passing required!
 
-**`registerUser`** - Register a new user account
-- **Parameters:**
-  - `username` (string, required) - Unique username
-  - `password` (string, required) - User password
-  - `email` (string, required) - User email address
-- **Returns:** `{success: boolean, token: string, username: string, email: string}`
-
-**`loginUser`** - Login with existing credentials
-- **Parameters:**
-  - `username` (string, required) - Username
-  - `password` (string, required) - Password
-- **Returns:** `{success: boolean, token: string, username: string, email: string}`
+### Health Check
 
 **`healthCheck`** - Check if the Frugal Fox API is healthy
 - **Parameters:** None
 - **Returns:** `{success: boolean, status: string}`
 
 ### Expense Management Tools
-
-> **Note:** All expense tools automatically use JWT tokens when credentials are provided via SSE query parameters. No manual token passing required!
 
 **`createExpense`** - Create a new expense
 - **Parameters:**
@@ -426,20 +413,7 @@ AI: Uses deleteExpense(id="1")
     Returns: {success: true, message: "Expense deleted successfully"}
 ```
 
-**Legacy workflow (without automatic token management):**
-
-```
-User: "Register me as alice with email alice@example.com"
-AI: Uses registerUser(username="alice", password="secure123", email="alice@example.com")
-    Returns: {success: true, token: "eyJ..."}
-
-User: "Add a $50 expense from Starbucks yesterday"
-AI: Uses createExpense(token="eyJ...", date="2025-12-31", merchant="Starbucks",
-                       amount="50.00", bank="Chase", category="Dining")
-    Returns: {success: true, expense: {...}}
-```
-
-**Note:** With automatic token management enabled via SSE query parameters, users don't need to manually register or login - the server handles authentication transparently.
+**Note:** With automatic token management enabled via credentials in configuration, users don't need to manually pass tokens - the server handles authentication transparently. You must register a user account via the backend API or frontend application before using the MCP server.
 
 ## Development Workflows
 
@@ -553,7 +527,7 @@ curl -N http://localhost:8081/sse
 mvn clean package
 docker compose up --build mcp
 
-# Check logs for "Registered tools: 9"
+# Check logs for "Registered tools: 7"
 docker compose logs mcp | grep "Registered tools"
 ```
 

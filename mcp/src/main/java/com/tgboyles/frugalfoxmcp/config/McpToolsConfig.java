@@ -1,6 +1,5 @@
 package com.tgboyles.frugalfoxmcp.config;
 
-import com.tgboyles.frugalfoxmcp.dto.AuthResponse;
 import com.tgboyles.frugalfoxmcp.dto.ExpenseRequest;
 import com.tgboyles.frugalfoxmcp.dto.ExpenseResponse;
 import com.tgboyles.frugalfoxmcp.service.CredentialsHolder;
@@ -37,31 +36,6 @@ public class McpToolsConfig {
             throw new IllegalStateException("No credentials available. Please provide username and password in SSE connection URL.");
         }
         return tokenManager.getValidToken(credentialsHolder.getUsername(), credentialsHolder.getPassword());
-    }
-
-    @McpTool(name = "registerUser", description = "Register a new user account. Returns a JWT token that must be used for all subsequent expense operations.")
-    public Map<String, Object> registerUser(
-            @McpToolParam(description = "Username for the new account", required = true) String username,
-            @McpToolParam(description = "Password for the new account", required = true) String password,
-            @McpToolParam(description = "Email address for the new account", required = true) String email) {
-        try {
-            AuthResponse response = apiClient.register(username, password, email);
-            return Map.of("success", true, "token", response.token(), "username", response.username(), "email", response.email());
-        } catch (Exception e) {
-            return Map.of("success", false, "error", e.getMessage());
-        }
-    }
-
-    @McpTool(name = "loginUser", description = "Login with existing credentials. Returns a JWT token that must be used for all subsequent expense operations.")
-    public Map<String, Object> loginUser(
-            @McpToolParam(description = "Username", required = true) String username,
-            @McpToolParam(description = "Password", required = true) String password) {
-        try {
-            AuthResponse response = apiClient.login(username, password);
-            return Map.of("success", true, "token", response.token(), "username", response.username(), "email", response.email());
-        } catch (Exception e) {
-            return Map.of("success", false, "error", e.getMessage());
-        }
     }
 
     @McpTool(name = "healthCheck", description = "Check if the Frugal Fox API is running and healthy.")
