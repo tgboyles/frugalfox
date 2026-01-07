@@ -3,8 +3,6 @@ package com.tgboyles.frugalfoxmcp.config;
 import com.tgboyles.frugalfoxmcp.service.CredentialsHolder;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -23,7 +21,6 @@ import java.io.IOException;
 @Order(1)
 public class SseCredentialsFilter implements Filter {
 
-    private static final Logger log = LoggerFactory.getLogger(SseCredentialsFilter.class);
     private static final String USERNAME_HEADER = "X-Frugalfox-Username";
     private static final String PASSWORD_HEADER = "X-Frugalfox-Password";
 
@@ -47,9 +44,6 @@ public class SseCredentialsFilter implements Filter {
 
                 if (username != null && password != null) {
                     credentialsHolder.setCredentials(username, password);
-                    log.info("Captured credentials from HTTP headers for user: {}", username);
-                } else {
-                    log.debug("No credentials in HTTP headers, using existing if available");
                 }
             }
         }

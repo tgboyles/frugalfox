@@ -1,7 +1,5 @@
 package com.tgboyles.frugalfoxmcp.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -10,9 +8,6 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class CredentialsHolder {
-
-    private static final Logger log = LoggerFactory.getLogger(CredentialsHolder.class);
-
     private String username;
     private String password;
 
@@ -22,7 +17,6 @@ public class CredentialsHolder {
     public void setCredentials(String username, String password) {
         this.username = username;
         this.password = password;
-        log.info("Credentials set for user: {}", username);
     }
 
     /**
@@ -52,6 +46,5 @@ public class CredentialsHolder {
     public void clearCredentials() {
         this.username = null;
         this.password = null;
-        log.info("Credentials cleared");
     }
 }
