@@ -1,13 +1,15 @@
 package com.tgboyles.frugalfoxmcp.dto;
 
+import org.springframework.lang.NonNull;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record ExpenseRequest(
-    LocalDate date,
-    String merchant,
-    BigDecimal amount,
-    String bank,
-    String category
+    @NonNull LocalDate date,
+    @NonNull String merchant,
+    @NonNull BigDecimal amount,
+    @NonNull String bank,
+    @NonNull String category
 ) {
 }

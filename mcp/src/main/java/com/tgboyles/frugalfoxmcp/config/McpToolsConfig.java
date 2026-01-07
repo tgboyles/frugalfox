@@ -7,12 +7,14 @@ import com.tgboyles.frugalfoxmcp.service.FrugalFoxApiClient;
 import com.tgboyles.frugalfoxmcp.service.TokenManager;
 import org.springaicommunity.mcp.annotation.McpTool;
 import org.springaicommunity.mcp.annotation.McpToolParam;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Component
 public class McpToolsConfig {
@@ -31,11 +33,13 @@ public class McpToolsConfig {
      * Get a valid token, automatically refreshing if expired.
      * Requires credentials to have been provided via SSE query parameters.
      */
+    @NonNull
     private String getValidToken() {
         if (!credentialsHolder.hasCredentials()) {
             throw new IllegalStateException("No credentials available. Please provide username and password in SSE connection URL.");
         }
-        return tokenManager.getValidToken(credentialsHolder.getUsername(), credentialsHolder.getPassword());
+        String token = tokenManager.getValidToken(credentialsHolder.getUsername(), credentialsHolder.getPassword());
+        return token;
     }
 
     @McpTool(name = "healthCheck", description = "Check if the Frugal Fox API is running and healthy.")
@@ -58,11 +62,11 @@ public class McpToolsConfig {
         try {
             String token = getValidToken();
             ExpenseRequest expReq = new ExpenseRequest(
-                LocalDate.parse(date),
-                merchant,
-                new BigDecimal(amount),
-                bank,
-                category
+                Objects.requireNonNull(LocalDate.parse(Objects.requireNonNull(date))),
+                Objects.requireNonNull(merchant),
+                Objects.requireNonNull(new BigDecimal(Objects.requireNonNull(amount))),
+                Objects.requireNonNull(bank),
+                Objects.requireNonNull(category)
             );
             ExpenseResponse response = apiClient.createExpense(token, expReq);
             return Map.of("success", true, "expense", buildExpenseMap(response));
@@ -76,7 +80,7 @@ public class McpToolsConfig {
             @McpToolParam(description = "Expense ID", required = true) Long id) {
         try {
             String token = getValidToken();
-            ExpenseResponse response = apiClient.getExpense(token, id);
+            ExpenseResponse response = apiClient.getExpense(token, Objects.requireNonNull(id));
             return Map.of("success", true, "expense", buildExpenseMap(response));
         } catch (Exception e) {
             return Map.of("success", false, "error", e.getMessage());
@@ -94,13 +98,13 @@ public class McpToolsConfig {
         try {
             String token = getValidToken();
             ExpenseRequest expReq = new ExpenseRequest(
-                LocalDate.parse(date),
-                merchant,
-                new BigDecimal(amount),
-                bank,
-                category
+                Objects.requireNonNull(LocalDate.parse(Objects.requireNonNull(date))),
+                Objects.requireNonNull(merchant),
+                Objects.requireNonNull(new BigDecimal(Objects.requireNonNull(amount))),
+                Objects.requireNonNull(bank),
+                Objects.requireNonNull(category)
             );
-            ExpenseResponse response = apiClient.updateExpense(token, id, expReq);
+            ExpenseResponse response = apiClient.updateExpense(token, Objects.requireNonNull(id), expReq);
             return Map.of("success", true, "expense", buildExpenseMap(response));
         } catch (Exception e) {
             return Map.of("success", false, "error", e.getMessage());
@@ -112,7 +116,7 @@ public class McpToolsConfig {
             @McpToolParam(description = "Expense ID to delete", required = true) Long id) {
         try {
             String token = getValidToken();
-            apiClient.deleteExpense(token, id);
+            apiClient.deleteExpense(token, Objects.requireNonNull(id));
             return Map.of("success", true, "message", "Expense deleted successfully");
         } catch (Exception e) {
             return Map.of("success", false, "error", e.getMessage());

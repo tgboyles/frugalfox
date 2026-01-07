@@ -3,6 +3,7 @@ package com.tgboyles.frugalfoxmcp.service;
 import com.tgboyles.frugalfoxmcp.dto.AuthResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -29,7 +30,8 @@ public class TokenManager {
      * Get a valid token for the given username/password.
      * Returns cached token if valid, otherwise refreshes.
      */
-    public String getValidToken(String username, String password) {
+    @NonNull
+    public String getValidToken(@NonNull String username, @NonNull String password) {
         String cacheKey = username;
         TokenInfo cachedToken = tokenCache.get(cacheKey);
 
@@ -126,9 +128,10 @@ public class TokenManager {
      * Internal class to store token info
      */
     private static class TokenInfo {
+        @NonNull
         final String token;
 
-        TokenInfo(String token, String username, String password) {
+        TokenInfo(@NonNull String token, @NonNull String username, @NonNull String password) {
             this.token = token;
         }
     }

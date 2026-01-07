@@ -1,4 +1,6 @@
 package com.tgboyles.frugalfoxmcp.dto;
 
-public record AuthRequest(String username, String password) {
+import org.springframework.lang.NonNull;
+
+public record AuthRequest(@NonNull String username, @NonNull String password) {
 }

@@ -20,7 +20,7 @@ import java.io.IOException;
 @Component
 @Order(1)
 public class SseCredentialsFilter implements Filter {
-
+    
     private static final String USERNAME_HEADER = "X-Frugalfox-Username";
     private static final String PASSWORD_HEADER = "X-Frugalfox-Password";
 
@@ -44,7 +44,7 @@ public class SseCredentialsFilter implements Filter {
 
                 if (username != null && password != null) {
                     credentialsHolder.setCredentials(username, password);
-                }
+                } 
             }
         }
 

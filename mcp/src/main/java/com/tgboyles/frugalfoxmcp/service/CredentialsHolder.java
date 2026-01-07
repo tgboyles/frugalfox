@@ -1,6 +1,9 @@
 package com.tgboyles.frugalfoxmcp.service;
 
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
 
 /**
  * Holds user credentials passed via SSE query parameters.
@@ -22,15 +25,17 @@ public class CredentialsHolder {
     /**
      * Get the stored username
      */
+    @NonNull
     public String getUsername() {
-        return username;
+        return Objects.requireNonNull(username, "Username not set");
     }
 
     /**
      * Get the stored password
      */
+    @NonNull
     public String getPassword() {
-        return password;
+        return Objects.requireNonNull(password, "Password not set");
     }
 
     /**

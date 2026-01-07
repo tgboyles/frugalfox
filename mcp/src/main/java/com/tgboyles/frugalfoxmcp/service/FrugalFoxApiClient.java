@@ -15,6 +15,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class FrugalFoxApiClient {
@@ -31,54 +32,62 @@ public class FrugalFoxApiClient {
     }
 
     // Authentication method (used internally by TokenManager for automatic token refresh)
-    public AuthResponse login(String username, String password) {
+    @NonNull
+    public AuthResponse login(@NonNull String username, @NonNull String password) {
         AuthRequest request = new AuthRequest(username, password);
-        return webClient.post()
+        return Objects.requireNonNull(webClient.post()
                 .uri("/auth/login")
                 .bodyValue(request)
                 .retrieve()
                 .bodyToMono(AuthResponse.class)
                 .timeout(Duration.ofMillis(config.getTimeout()))
-                .block();
+                .block());
     }
 
     // Expense CRUD methods
-    public ExpenseResponse createExpense(String token, @NonNull ExpenseRequest expenseRequest) {
-        return webClient.post()
+    @NonNull
+    public ExpenseResponse createExpense(@NonNull String token, @NonNull ExpenseRequest expenseRequest) {
+        String authHeader = "Bearer " + token;
+        return Objects.requireNonNull(webClient.post()
                 .uri("/expenses")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .header(HttpHeaders.AUTHORIZATION, authHeader)
                 .bodyValue(expenseRequest)
                 .retrieve()
                 .bodyToMono(ExpenseResponse.class)
                 .timeout(Duration.ofMillis(config.getTimeout()))
-                .block();
+                .block());
     }
 
-    public ExpenseResponse getExpense(String token, Long id) {
-        return webClient.get()
+    @NonNull
+    public ExpenseResponse getExpense(@NonNull String token, @NonNull Long id) {
+        String authHeader = "Bearer " + token;
+        return Objects.requireNonNull(webClient.get()
                 .uri("/expenses/{id}", id)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .header(HttpHeaders.AUTHORIZATION, authHeader)
                 .retrieve()
                 .bodyToMono(ExpenseResponse.class)
                 .timeout(Duration.ofMillis(config.getTimeout()))
-                .block();
+                .block());
     }
 
-    public ExpenseResponse updateExpense(String token, Long id, @NonNull ExpenseRequest expenseRequest) {
-        return webClient.put()
+    @NonNull
+    public ExpenseResponse updateExpense(@NonNull String token, @NonNull Long id, @NonNull ExpenseRequest expenseRequest) {
+        String authHeader = "Bearer " + token;
+        return Objects.requireNonNull(webClient.put()
                 .uri("/expenses/{id}", id)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .header(HttpHeaders.AUTHORIZATION, authHeader)
                 .bodyValue(expenseRequest)
                 .retrieve()
                 .bodyToMono(ExpenseResponse.class)
                 .timeout(Duration.ofMillis(config.getTimeout()))
-                .block();
+                .block());
     }
 
-    public void deleteExpense(String token, Long id) {
+    public void deleteExpense(@NonNull String token, @NonNull Long id) {
+        String authHeader = "Bearer " + token;
         webClient.delete()
                 .uri("/expenses/{id}", id)
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .header(HttpHeaders.AUTHORIZATION, authHeader)
                 .retrieve()
                 .bodyToMono(Void.class)
                 .timeout(Duration.ofMillis(config.getTimeout()))
@@ -86,8 +95,9 @@ public class FrugalFoxApiClient {
     }
 
     // Expense search and filter
+    @NonNull
     public Map<String, Object> searchExpenses(
-            String token,
+            @NonNull String token,
             String category,
             String bank,
             String merchant,
@@ -120,13 +130,14 @@ public class FrugalFoxApiClient {
             uriBuilder.deleteCharAt(uriBuilder.length() - 1); // Remove trailing &
         }
 
-        return webClient.get()
-                .uri(uriBuilder.toString())
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+        String authHeader = "Bearer " + token;
+        return Objects.requireNonNull(webClient.get()
+                .uri(Objects.requireNonNull(uriBuilder.toString()))
+                .header(HttpHeaders.AUTHORIZATION, authHeader)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
                 .timeout(Duration.ofMillis(config.getTimeout()))
-                .block();
+                .block());
     }
 
     public String healthCheck() {
