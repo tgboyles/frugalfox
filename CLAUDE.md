@@ -288,7 +288,7 @@ frugal_fox/
 #### Backend Development
 
 1. **Environment Setup**
-   - Prefer Docker Compose for full stack: `docker compose up --build`
+   - Prefer Docker Compose for full stack: `docker compose up --build --force-recreate`. ALWAYS FORCE_RECREATE!
    - Use database-only mode for local development: `docker compose up -d postgres`
    - Run backend locally: `cd backend && mvn spring-boot:run`
 

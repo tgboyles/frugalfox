@@ -38,7 +38,10 @@ public class McpToolsConfig {
         if (!credentialsHolder.hasCredentials()) {
             throw new IllegalStateException("No credentials available. Please provide username and password in SSE connection URL.");
         }
-        String token = tokenManager.getValidToken(credentialsHolder.getUsername(), credentialsHolder.getPassword());
+        // Get password as char[] - TokenManager will clear it after use
+        char[] password = credentialsHolder.getPassword();
+        String token = tokenManager.getValidToken(credentialsHolder.getUsername(), password);
+        // Note: password array is already cleared by TokenManager.getValidToken
         return token;
     }
 

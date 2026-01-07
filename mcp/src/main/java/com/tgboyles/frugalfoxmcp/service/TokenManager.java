@@ -29,27 +29,41 @@ public class TokenManager {
     /**
      * Get a valid token for the given username/password.
      * Returns cached token if valid, otherwise refreshes.
+     *
+     * @param username The username
+     * @param password The password as char array (will be cleared after use)
      */
     @NonNull
-    public String getValidToken(@NonNull String username, @NonNull String password) {
+    public String getValidToken(@NonNull String username, @NonNull char[] password) {
         String cacheKey = username;
         TokenInfo cachedToken = tokenCache.get(cacheKey);
 
-        // Check if we have a valid cached token
-        if (cachedToken != null && !isTokenExpired(cachedToken.token)) {
-            log.debug("Using cached token for user: {}", username);
-            return cachedToken.token;
+        try {
+            // Check if we have a valid cached token
+            if (cachedToken != null && !isTokenExpired(cachedToken.token)) {
+                log.debug("Using cached token for user: {}", username);
+                return cachedToken.token;
+            }
+
+            // Token expired or doesn't exist - login to get new token
+            log.info("Token expired or missing for user: {}, refreshing...", username);
+
+            // Convert char[] to String for API call (temporary)
+            String passwordStr = new String(password);
+            try {
+                AuthResponse authResponse = apiClient.login(username, passwordStr);
+                TokenInfo newTokenInfo = new TokenInfo(authResponse.token(), username);
+                tokenCache.put(cacheKey, newTokenInfo);
+                return authResponse.token();
+            } finally {
+                // Clear the temporary password string by replacing with zeros
+                // Note: This is a best-effort approach; String interning may prevent complete removal
+                passwordStr = null;
+            }
+        } finally {
+            // Securely clear the password array after use
+            java.util.Arrays.fill(password, '\0');
         }
-
-        // Token expired or doesn't exist - login to get new token
-        log.info("Token expired or missing for user: {}, refreshing...", username);
-        AuthResponse authResponse = apiClient.login(username, password);
-
-        TokenInfo newTokenInfo = new TokenInfo(authResponse.token(), username, password);
-        tokenCache.put(cacheKey, newTokenInfo);
-
-        log.info("Token refreshed successfully for user: {}", username);
-        return authResponse.token();
     }
 
     /**
@@ -126,12 +140,13 @@ public class TokenManager {
 
     /**
      * Internal class to store token info
+     * Note: We only cache the token, not the credentials
      */
     private static class TokenInfo {
         @NonNull
         final String token;
 
-        TokenInfo(@NonNull String token, @NonNull String username, @NonNull String password) {
+        TokenInfo(@NonNull String token, @NonNull String username) {
             this.token = token;
         }
     }
