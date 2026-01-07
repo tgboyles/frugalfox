@@ -5,6 +5,7 @@ import com.tgboyles.frugalfoxmcp.dto.*;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -42,7 +43,7 @@ public class FrugalFoxApiClient {
     }
 
     // Expense CRUD methods
-    public ExpenseResponse createExpense(String token, ExpenseRequest expenseRequest) {
+    public ExpenseResponse createExpense(String token, @NonNull ExpenseRequest expenseRequest) {
         return webClient.post()
                 .uri("/expenses")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
@@ -63,7 +64,7 @@ public class FrugalFoxApiClient {
                 .block();
     }
 
-    public ExpenseResponse updateExpense(String token, Long id, ExpenseRequest expenseRequest) {
+    public ExpenseResponse updateExpense(String token, Long id, @NonNull ExpenseRequest expenseRequest) {
         return webClient.put()
                 .uri("/expenses/{id}", id)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
