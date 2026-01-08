@@ -91,12 +91,17 @@ public ResponseEntity<ImportResult> importExpenses(
 			MAX_CSV_FILE_SIZE_BYTES, file.getSize()));
 	}
 
-	// Validate content type
+	// Validate content type (allow common CSV MIME types across platforms)
 	String contentType = file.getContentType();
-	if (contentType == null
-		|| (!contentType.equals("text/csv") && !contentType.equals("application/csv"))) {
+	if (contentType == null) {
+	throw new CsvImportException("Invalid file type. Could not determine content type.");
+	}
+	if (!(contentType.equals("text/csv")
+		|| contentType.equals("application/csv")
+		|| contentType.equals("text/plain")
+		|| contentType.equals("application/vnd.ms-excel"))) {
 	throw new CsvImportException(
-		"Invalid file type. Expected CSV file (text/csv), but got: " + contentType);
+		"Invalid file type. Expected a CSV file, but got: " + contentType);
 	}
 
 	ImportResult result = expenseService.importExpenses(file.getInputStream(), user);
