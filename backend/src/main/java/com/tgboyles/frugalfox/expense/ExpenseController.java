@@ -34,6 +34,9 @@ import jakarta.validation.Valid;
 @RequestMapping("/expenses")
 public class ExpenseController {
 
+/** Maximum allowed CSV file size in bytes (1MB). Must match spring.servlet.multipart.max-file-size. */
+private static final long MAX_CSV_FILE_SIZE_BYTES = 1024 * 1024; // 1MB
+
 private final ExpenseService expenseService;
 
 public ExpenseController(ExpenseService expenseService) {
@@ -80,13 +83,12 @@ public ResponseEntity<ImportResult> importExpenses(
 	throw new CsvImportException("File is required and cannot be empty");
 	}
 
-	// Validate file size (1MB max to prevent memory issues)
-	long maxFileSize = 1024 * 1024; // 1MB
-	if (file.getSize() > maxFileSize) {
+	// Validate file size to prevent memory exhaustion attacks
+	if (file.getSize() > MAX_CSV_FILE_SIZE_BYTES) {
 	throw new CsvImportException(
 		String.format(
 			"File size exceeds maximum limit of %d bytes. File size: %d bytes",
-			maxFileSize, file.getSize()));
+			MAX_CSV_FILE_SIZE_BYTES, file.getSize()));
 	}
 
 	// Validate content type
