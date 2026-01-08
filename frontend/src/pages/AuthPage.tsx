@@ -1,10 +1,33 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+
+const QUOTES = [
+  { text: "A penny saved is a penny earned.", author: "Benjamin Franklin" },
+  { text: "Beware of little expenses; a small leak will sink a great ship.", author: "Benjamin Franklin" },
+  { text: "Do not save what is left after spending, but spend what is left after saving.", author: "Warren Buffett" },
+  { text: "The habit of saving is itself an education; it fosters every virtue, teaches self-denial, cultivates the sense of order, trains to forethought, and so broadens the mind.", author: "T.T. Munger" },
+  { text: "It's not your salary that makes you rich, it's your spending habits.", author: "Charles A. Jaffe" },
+  { text: "Too many people spend money they haven't earned, to buy things they don't want, to impress people they don't like.", author: "Will Rogers" },
+  { text: "Annual income twenty pounds, annual expenditure nineteen six, result happiness. Annual income twenty pounds, annual expenditure twenty pound ought and six, result misery.", author: "Charles Dickens" },
+  { text: "He who buys what he does not need steals from himself.", author: "Swedish Proverb" },
+  { text: "The price of anything is the amount of life you exchange for it.", author: "Henry David Thoreau" },
+  { text: "Frugality includes all the other virtues.", author: "Cicero" },
+  { text: "Wealth consists not in having great possessions, but in having few wants.", author: "Epictetus" },
+  { text: "A budget is telling your money where to go instead of wondering where it went.", author: "Dave Ramsey" },
+  { text: "Never spend your money before you have earned it.", author: "Thomas Jefferson" },
+  { text: "Money is a terrible master but an excellent servant.", author: "P.T. Barnum" },
+  { text: "The art is not in making money, but in keeping it.", author: "Proverb" },
+  { text: "Economy is half the battle of life; it is not so hard to earn money as to spend it well.", author: "Charles Spurgeon" },
+  { text: "Live below your means but within your needs.", author: "Unknown" },
+  { text: "Mere parsimony is not economy. Expense, and great expense, may be an essential part of true economy.", author: "Edmund Burke" },
+  { text: "By sowing frugality we reap liberty, a golden harvest.", author: "Agesilaus" },
+  { text: "The quickest way to double your money is to fold it in half and put it in your back pocket.", author: "Will Rogers" },
+];
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -13,9 +36,18 @@ export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
 
   const { login, register } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentQuoteIndex((prevIndex) => (prevIndex + 1) % QUOTES.length);
+    }, 8000); // Change quote every 8 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,10 +84,10 @@ export default function AuthPage() {
           <h1 className="text-3xl font-bold">Frugal Fox</h1>
         </div>
         <div className="space-y-4">
-          <blockquote className="text-lg">
-            "This expense tracker has saved me countless hours of work and helped me manage my finances better than ever before."
+          <blockquote className="text-lg transition-opacity duration-500">
+            "{QUOTES[currentQuoteIndex].text}"
           </blockquote>
-          <div className="text-sm">— Happy User</div>
+          <div className="text-sm">— {QUOTES[currentQuoteIndex].author}</div>
         </div>
       </div>
 
