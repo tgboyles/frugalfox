@@ -35,6 +35,8 @@ import jakarta.validation.Validator;
 @Transactional
 public class ExpenseService {
 
+private static final int MAX_IMPORT_ROWS = 1000;
+
 private final ExpenseRepository expenseRepository;
 private final Validator validator;
 
@@ -134,7 +136,6 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 	ImportResult result = new ImportResult();
 	List<Expense> expensesToSave = new ArrayList<>();
 	int rowNumber = 0;
-	int totalRows = 0;
 
 	try (Reader reader = new InputStreamReader(inputStream);
 		CSVParser csvParser =
@@ -151,12 +152,11 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 	// Stream records one at a time instead of loading all into memory
 	for (CSVRecord record : csvParser) {
 		rowNumber = (int) record.getRecordNumber();
-		totalRows++;
 
 		// Check row limit during streaming
-		if (totalRows > 1000) {
+		if (rowNumber > MAX_IMPORT_ROWS) {
 			throw new CsvImportException(
-				"File exceeds maximum row limit of 1000. Found at least " + totalRows + " rows.");
+				"File exceeds maximum row limit of " + MAX_IMPORT_ROWS + ". Found at least " + rowNumber + " rows.");
 		}
 
 		try {
@@ -234,7 +234,7 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 	}
 
 	// Set total rows after processing all records
-	result.setTotalRows(totalRows);
+	result.setTotalRows(rowNumber);
 
 	// Save all valid expenses
 	if (!expensesToSave.isEmpty()) {
