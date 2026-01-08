@@ -8,7 +8,7 @@ export default function DashboardLayout() {
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <main className="flex-1">
-          <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 lg:px-6">
+          <header className="bg-background sticky top-0 z-10 flex h-14 items-center gap-4 border-b px-4 lg:px-6">
             <SidebarTrigger />
             <div className="flex-1">
               <h1 className="text-lg font-semibold">Expense Tracker</h1>

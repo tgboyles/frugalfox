@@ -28,7 +28,7 @@ export default function AuthPage() {
     const interval = setInterval(() => {
       // Start fade-out
       setIsTransitioning(true);
-      
+
       // Change quote after fade-out completes
       timeoutRef.current = setTimeout(() => {
         setCurrentQuoteIndex((prevIndex) => (prevIndex + 1) % QUOTES.length);
@@ -57,33 +57,39 @@ export default function AuthPage() {
         await register(username, password, email);
       }
       navigate('/dashboard');
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-        `Failed to ${isLogin ? 'login' : 'register'}. Please try again.`
-      );
+    } catch (err: unknown) {
+      const errorMessage =
+        (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+        `Failed to ${isLogin ? 'login' : 'register'}. Please try again.`;
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
+    <div className="grid min-h-screen lg:grid-cols-2">
       {/* Left side - Branding */}
-      <div className="hidden lg:flex bg-primary text-primary-foreground p-12 flex-col justify-between">
+      <div className="bg-primary text-primary-foreground hidden flex-col justify-between p-12 lg:flex">
         <div className="space-y-4">
           <img
             src="/fox.png"
             alt="Frugal Fox Logo"
-            className="w-24 h-24 rounded-full object-cover bg-white p-2 border-4 border-primary-foreground/20"
+            className="border-primary-foreground/20 h-24 w-24 rounded-full border-4 bg-white object-cover p-2"
           />
           <h1 className="text-3xl font-bold">Frugal Fox</h1>
         </div>
         <div className="space-y-4">
-          <blockquote className={`text-lg transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+          <blockquote
+            className={`text-lg transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}
+          >
             "{QUOTES[currentQuoteIndex].text}"
           </blockquote>
-          <div className={`text-sm transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>— {QUOTES[currentQuoteIndex].author}</div>
+          <div
+            className={`text-sm transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}
+          >
+            — {QUOTES[currentQuoteIndex].author}
+          </div>
         </div>
       </div>
 
@@ -91,9 +97,7 @@ export default function AuthPage() {
       <div className="flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-6">
           <div className="space-y-2 text-center">
-            <h1 className="text-3xl font-bold">
-              {isLogin ? 'Welcome back' : 'Create an account'}
-            </h1>
+            <h1 className="text-3xl font-bold">{isLogin ? 'Welcome back' : 'Create an account'}</h1>
             <p className="text-muted-foreground">
               {isLogin
                 ? 'Enter your credentials to access your account'
@@ -144,16 +148,10 @@ export default function AuthPage() {
                 </div>
               )}
 
-              {error && (
-                <div className="text-sm text-destructive">{error}</div>
-              )}
+              {error && <div className="text-destructive text-sm">{error}</div>}
 
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading
-                  ? 'Please wait...'
-                  : isLogin
-                  ? 'Sign In'
-                  : 'Create Account'}
+                {isLoading ? 'Please wait...' : isLogin ? 'Sign In' : 'Create Account'}
               </Button>
             </form>
           </Card>
@@ -165,7 +163,7 @@ export default function AuthPage() {
                 <button
                   type="button"
                   onClick={() => setIsLogin(false)}
-                  className="underline underline-offset-4 hover:text-primary"
+                  className="hover:text-primary underline underline-offset-4"
                 >
                   Sign up
                 </button>
@@ -176,7 +174,7 @@ export default function AuthPage() {
                 <button
                   type="button"
                   onClick={() => setIsLogin(true)}
-                  className="underline underline-offset-4 hover:text-primary"
+                  className="hover:text-primary underline underline-offset-4"
                 >
                   Sign in
                 </button>
@@ -184,7 +182,7 @@ export default function AuthPage() {
             )}
           </div>
 
-          <p className="text-xs text-center text-muted-foreground px-8">
+          <p className="text-muted-foreground px-8 text-center text-xs">
             By continuing, you agree to our Terms of Service and Privacy Policy.
           </p>
         </div>
