@@ -642,6 +642,44 @@ public void testImportExpensesUserIsolation() throws Exception {
 		.andExpect(jsonPath("$.content[0].merchant").value("User2 Store"));
 }
 
+@Test
+public void testImportExpensesRowLimitExceeded() throws Exception {
+	// Generate CSV with 1001 rows (exceeds limit of 1000)
+	StringBuilder csvContent = new StringBuilder();
+	csvContent.append("date,merchant,amount,bank,category\n");
+
+	// Generate 1001 valid expense rows
+	for (int i = 1; i <= 1001; i++) {
+		csvContent.append(String.format(
+			"2025-01-%02d,Store %d,%.2f,Chase,Shopping\n",
+			(i % 28) + 1, // Cycle through valid days (1-28)
+			i,
+			10.00 + (i * 0.5)
+		));
+	}
+
+	MockMultipartFile file =
+		new MockMultipartFile(
+			"file",
+			"expenses.csv",
+			"text/csv",
+			csvContent.toString().getBytes(StandardCharsets.UTF_8));
+
+	mvc.perform(
+			multipart("/expenses/import")
+				.file(file)
+				.header("Authorization", "Bearer " + authToken))
+		.andExpect(status().isBadRequest())
+		.andExpect(jsonPath("$.message").value(containsString("exceeds maximum row limit of 1000")));
+
+	// Verify no expenses were saved
+	mvc.perform(
+			get("/expenses")
+				.header("Authorization", "Bearer " + authToken))
+		.andExpect(status().isOk())
+		.andExpect(jsonPath("$.content", hasSize(0)));
+}
+
 // Helper methods
 
 private Expense createTestExpense(String merchant, BigDecimal amount, String category) {
