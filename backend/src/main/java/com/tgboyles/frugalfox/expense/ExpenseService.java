@@ -283,17 +283,15 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 }
 
 /**
-* Saves a batch of expenses in a separate transaction.
-*
-* <p>This method is called with REQUIRES_NEW propagation to ensure each batch
-* is saved in its own transaction, independent of other batches. If saving fails,
-* the error is caught and recorded in the result, but does not affect other batches.
-*
-* @param batch the list of expenses to save
-* @param rowNumbers the row numbers corresponding to each expense in the batch
-* @param result the import result to update with success/failure statistics
-*/
-@Transactional(propagation = Propagation.REQUIRES_NEW)
+ * Saves a batch of expenses and updates the import result.
+ *
+ * <p>If saving fails, the error is caught and recorded in the result for the
+ * corresponding batch of rows.
+ *
+ * @param batch the list of expenses to save
+ * @param rowNumbers the row numbers corresponding to each expense in the batch
+ * @param result the import result to update with success/failure statistics
+ */
 protected void saveBatch(List<Expense> batch, List<Integer> rowNumbers, ImportResult result) {
 	if (batch.isEmpty()) {
 		return;
