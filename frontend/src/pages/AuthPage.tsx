@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -38,6 +38,7 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const timeoutRef = useRef<number | null>(null);
 
   const { login, register } = useAuth();
   const navigate = useNavigate();
@@ -48,14 +49,19 @@ export default function AuthPage() {
       setIsTransitioning(true);
       
       // Change quote after fade-out completes
-      setTimeout(() => {
+      timeoutRef.current = window.setTimeout(() => {
         setCurrentQuoteIndex((prevIndex) => (prevIndex + 1) % QUOTES.length);
         // Start fade-in
         setIsTransitioning(false);
       }, 500); // Match the transition duration
     }, 8000); // Change quote every 8 seconds
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (timeoutRef.current !== null) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
