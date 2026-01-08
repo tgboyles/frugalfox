@@ -156,7 +156,7 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 		// Check row limit during streaming
 		if (totalRows > 1000) {
 			throw new CsvImportException(
-				"File exceeds maximum row limit of 1000. Found more than " + totalRows + " rows.");
+				"File exceeds maximum row limit of 1000. Found at least " + totalRows + " rows.");
 		}
 
 		try {
