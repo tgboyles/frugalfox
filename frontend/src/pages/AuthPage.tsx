@@ -37,13 +37,22 @@ export default function AuthPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const { login, register } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentQuoteIndex((prevIndex) => (prevIndex + 1) % QUOTES.length);
+      // Start fade-out
+      setIsTransitioning(true);
+      
+      // Change quote after fade-out completes
+      setTimeout(() => {
+        setCurrentQuoteIndex((prevIndex) => (prevIndex + 1) % QUOTES.length);
+        // Start fade-in
+        setIsTransitioning(false);
+      }, 500); // Match the transition duration
     }, 8000); // Change quote every 8 seconds
 
     return () => clearInterval(interval);
@@ -84,10 +93,10 @@ export default function AuthPage() {
           <h1 className="text-3xl font-bold">Frugal Fox</h1>
         </div>
         <div className="space-y-4">
-          <blockquote className="text-lg transition-opacity duration-500">
+          <blockquote className={`text-lg transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
             "{QUOTES[currentQuoteIndex].text}"
           </blockquote>
-          <div className="text-sm">— {QUOTES[currentQuoteIndex].author}</div>
+          <div className={`text-sm transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>— {QUOTES[currentQuoteIndex].author}</div>
         </div>
       </div>
 
