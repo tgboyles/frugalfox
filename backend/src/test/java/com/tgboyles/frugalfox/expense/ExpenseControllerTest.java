@@ -1,15 +1,18 @@
 package com.tgboyles.frugalfox.expense;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -404,6 +408,238 @@ public void testCannotAccessOtherUsersExpense() throws Exception {
 			get("/expenses/" + expense2.getId())
 				.header("Authorization", "Bearer " + authToken))
 		.andExpect(status().isNotFound());
+}
+
+@Test
+public void testImportExpensesSuccess() throws Exception {
+	String csvContent =
+		"""
+		date,merchant,amount,bank,category
+		2025-01-01,Whole Foods,50.00,Chase,Groceries
+		2025-01-02,Target,75.50,BofA,Shopping
+		""";
+
+	MockMultipartFile file =
+		new MockMultipartFile(
+			"file",
+			"expenses.csv",
+			"text/csv",
+			csvContent.getBytes(StandardCharsets.UTF_8));
+
+	mvc.perform(
+			multipart("/expenses/import")
+				.file(file)
+				.header("Authorization", "Bearer " + authToken))
+		.andExpect(status().isOk())
+		.andExpect(jsonPath("$.totalRows").value(2))
+		.andExpect(jsonPath("$.successfulImports").value(2))
+		.andExpect(jsonPath("$.failedImports").value(0))
+		.andExpect(jsonPath("$.errors").isEmpty());
+
+	// Verify expenses were actually saved
+	mvc.perform(
+			get("/expenses")
+				.header("Authorization", "Bearer " + authToken))
+		.andExpect(status().isOk())
+		.andExpect(jsonPath("$.content", hasSize(2)));
+}
+
+@Test
+public void testImportExpensesEmptyFile() throws Exception {
+	MockMultipartFile file =
+		new MockMultipartFile(
+			"file",
+			"expenses.csv",
+			"text/csv",
+			new byte[0]);
+
+	mvc.perform(
+			multipart("/expenses/import")
+				.file(file)
+				.header("Authorization", "Bearer " + authToken))
+		.andExpect(status().isBadRequest())
+		.andExpect(jsonPath("$.message").value("File is required and cannot be empty"));
+}
+
+@Test
+public void testImportExpensesFileSizeExceeded() throws Exception {
+	// Create a file larger than 1MB
+	byte[] largeContent = new byte[1024 * 1024 + 1]; // 1MB + 1 byte
+	MockMultipartFile file =
+		new MockMultipartFile(
+			"file",
+			"expenses.csv",
+			"text/csv",
+			largeContent);
+
+	mvc.perform(
+			multipart("/expenses/import")
+				.file(file)
+				.header("Authorization", "Bearer " + authToken))
+		.andExpect(status().isBadRequest())
+		.andExpect(jsonPath("$.message").value(containsString("File size exceeds maximum limit")));
+}
+
+@Test
+public void testImportExpensesInvalidContentType() throws Exception {
+	String csvContent =
+		"""
+		date,merchant,amount,bank,category
+		2025-01-01,Whole Foods,50.00,Chase,Groceries
+		""";
+
+	MockMultipartFile file =
+		new MockMultipartFile(
+			"file",
+			"expenses.json",
+			"application/json",
+			csvContent.getBytes(StandardCharsets.UTF_8));
+
+	mvc.perform(
+			multipart("/expenses/import")
+				.file(file)
+				.header("Authorization", "Bearer " + authToken))
+		.andExpect(status().isBadRequest())
+		.andExpect(jsonPath("$.message").value(containsString("Invalid file type")));
+}
+
+@Test
+public void testImportExpensesPartialSuccess() throws Exception {
+	String csvContent =
+		"""
+		date,merchant,amount,bank,category
+		2025-01-01,Whole Foods,50.00,Chase,Groceries
+		2025-13-01,Target,75.50,BofA,Shopping
+		2025-01-03,Amazon,25.00,Chase,Online
+		""";
+
+	MockMultipartFile file =
+		new MockMultipartFile(
+			"file",
+			"expenses.csv",
+			"text/csv",
+			csvContent.getBytes(StandardCharsets.UTF_8));
+
+	mvc.perform(
+			multipart("/expenses/import")
+				.file(file)
+				.header("Authorization", "Bearer " + authToken))
+		.andExpect(status().isOk())
+		.andExpect(jsonPath("$.totalRows").value(3))
+		.andExpect(jsonPath("$.successfulImports").value(2))
+		.andExpect(jsonPath("$.failedImports").value(1))
+		.andExpect(jsonPath("$.errors", hasSize(1)))
+		.andExpect(jsonPath("$.errors[0]").value(containsString("Invalid date format")));
+
+	// Verify only valid expenses were saved
+	mvc.perform(
+			get("/expenses")
+				.header("Authorization", "Bearer " + authToken))
+		.andExpect(status().isOk())
+		.andExpect(jsonPath("$.content", hasSize(2)));
+}
+
+@Test
+public void testImportExpensesUnauthorized() throws Exception {
+	String csvContent =
+		"""
+		date,merchant,amount,bank,category
+		2025-01-01,Whole Foods,50.00,Chase,Groceries
+		""";
+
+	MockMultipartFile file =
+		new MockMultipartFile(
+			"file",
+			"expenses.csv",
+			"text/csv",
+			csvContent.getBytes(StandardCharsets.UTF_8));
+
+	mvc.perform(
+			multipart("/expenses/import")
+				.file(file))
+		.andExpect(status().isForbidden());
+}
+
+@Test
+public void testImportExpensesUserIsolation() throws Exception {
+	// Import expenses for testUser
+	String csvContent1 =
+		"""
+		date,merchant,amount,bank,category
+		2025-01-01,User1 Store,100.00,Chase,Shopping
+		""";
+
+	MockMultipartFile file1 =
+		new MockMultipartFile(
+			"file",
+			"expenses.csv",
+			"text/csv",
+			csvContent1.getBytes(StandardCharsets.UTF_8));
+
+	mvc.perform(
+			multipart("/expenses/import")
+				.file(file1)
+				.header("Authorization", "Bearer " + authToken))
+		.andExpect(status().isOk());
+
+	// Create second user and login
+	User user2 = new User();
+	user2.setUsername("testuser2");
+	user2.setPassword(passwordEncoder.encode("password123"));
+	user2.setEmail("test2@example.com");
+	user2.setEnabled(true);
+	user2 = userRepository.save(user2);
+
+	AuthRequest loginRequest = new AuthRequest();
+	loginRequest.setUsername("testuser2");
+	loginRequest.setPassword("password123");
+
+	MvcResult result =
+		mvc.perform(
+				post("/auth/login")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(objectMapper.writeValueAsString(loginRequest)))
+			.andExpect(status().isOk())
+			.andReturn();
+
+	String user2Token =
+		objectMapper.readTree(result.getResponse().getContentAsString()).get("token").asText();
+
+	// Import expenses for user2
+	String csvContent2 =
+		"""
+		date,merchant,amount,bank,category
+		2025-01-02,User2 Store,200.00,BofA,Shopping
+		""";
+
+	MockMultipartFile file2 =
+		new MockMultipartFile(
+			"file",
+			"expenses.csv",
+			"text/csv",
+			csvContent2.getBytes(StandardCharsets.UTF_8));
+
+	mvc.perform(
+			multipart("/expenses/import")
+				.file(file2)
+				.header("Authorization", "Bearer " + user2Token))
+		.andExpect(status().isOk());
+
+	// Verify testUser only sees their own expenses
+	mvc.perform(
+			get("/expenses")
+				.header("Authorization", "Bearer " + authToken))
+		.andExpect(status().isOk())
+		.andExpect(jsonPath("$.content", hasSize(1)))
+		.andExpect(jsonPath("$.content[0].merchant").value("User1 Store"));
+
+	// Verify user2 only sees their own expenses
+	mvc.perform(
+			get("/expenses")
+				.header("Authorization", "Bearer " + user2Token))
+		.andExpect(status().isOk())
+		.andExpect(jsonPath("$.content", hasSize(1)))
+		.andExpect(jsonPath("$.content[0].merchant").value("User2 Store"));
 }
 
 // Helper methods
