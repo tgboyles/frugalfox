@@ -40,8 +40,8 @@ export const authApi = {
   login: (username: string, password: string) =>
     api.post('/auth/login', { username, password }),
 
-  register: (username: string, password: string) =>
-    api.post('/auth/register', { username, password }),
+  register: (username: string, password: string, email: string) =>
+    api.post('/auth/register', { username, password, email }),
 };
 
 export const expenseApi = {
