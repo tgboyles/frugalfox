@@ -133,6 +133,41 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+			<plugin>
+				<groupId>com.diffplug.spotless</groupId>
+				<artifactId>spotless-maven-plugin</artifactId>
+				<version>2.43.0</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>apply</goal>
+						</goals>
+						<phase>test</phase>
+					</execution>
+				</executions>
+				<configuration>
+					<java>
+						<!-- Simple formatting without external formatters for Java 23 compatibility -->
+						<!-- Remove unused imports -->
+						<removeUnusedImports/>
+
+						<!-- Consistent import ordering -->
+						<importOrder>
+							<order>java,javax,org,com,</order>
+						</importOrder>
+
+						<!-- Clean up trailing whitespace and ensure newline at end -->
+						<trimTrailingWhitespace/>
+						<endWithNewline/>
+
+						<!-- Use regex-based indentation normalization -->
+						<indent>
+							<tabs>true</tabs>
+							<spacesPerTab>4</spacesPerTab>
+						</indent>
+					</java>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 

@@ -6,7 +6,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -17,21 +16,21 @@ import org.springframework.web.context.WebApplicationContext;
 @SpringBootTest
 public class HelloControllerTest {
 
-  @Autowired
-  private WebApplicationContext context;
+@Autowired
+private WebApplicationContext context;
 
-  private MockMvc mvc;
+private MockMvc mvc;
 
-  @org.junit.jupiter.api.BeforeEach
-  public void setup() {
-    mvc = MockMvcBuilders.webAppContextSetup(context).build();
-  }
+@org.junit.jupiter.api.BeforeEach
+public void setup() {
+	mvc = MockMvcBuilders.webAppContextSetup(context).build();
+}
 
-  @Test
-  public void getHello() throws Exception {
-    mvc.perform(get("/").accept(MediaType.APPLICATION_JSON))
-      .andExpect(status().isOk())
-      .andExpect(content().string(equalTo("Welcome to the Frugal Fox API! This is the base route. Nothing to see here.")));
-  }
-  
+@Test
+public void getHello() throws Exception {
+	mvc.perform(get("/").accept(MediaType.APPLICATION_JSON))
+	.andExpect(status().isOk())
+	.andExpect(content().string(equalTo("Welcome to the Frugal Fox API! This is the base route. Nothing to see here.")));
+}
+
 }

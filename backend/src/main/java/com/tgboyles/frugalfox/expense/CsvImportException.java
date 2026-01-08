@@ -7,19 +7,19 @@ package com.tgboyles.frugalfox.expense;
  */
 public class CsvImportException extends RuntimeException {
 
-  private final String details;
+private final String details;
 
-  public CsvImportException(String message) {
-    super(message);
-    this.details = message;
-  }
+public CsvImportException(String message) {
+	super(message);
+	this.details = message;
+}
 
-  public CsvImportException(String message, Throwable cause) {
-    super(message, cause);
-    this.details = message;
-  }
+public CsvImportException(String message, Throwable cause) {
+	super(message, cause);
+	this.details = message;
+}
 
-  public String getDetails() {
-    return details;
-  }
+public String getDetails() {
+	return details;
+}
 }
