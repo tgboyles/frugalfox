@@ -12,6 +12,9 @@ on:
       - 'backend/**'
       - '.github/workflows/backend-test.yml'
 
+permissions:
+  contents: read
+
 jobs:
   test-and-format:
     name: Maven Test & Spotless Check
