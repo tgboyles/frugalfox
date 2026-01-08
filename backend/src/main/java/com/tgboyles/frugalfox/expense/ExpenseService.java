@@ -36,6 +36,7 @@ import jakarta.validation.Validator;
 public class ExpenseService {
 
 private static final int MAX_IMPORT_ROWS = 1000;
+private static final int BATCH_SIZE = 100;
 
 private final ExpenseRepository expenseRepository;
 private final Validator validator;
@@ -127,13 +128,14 @@ public Page<Expense> searchExpenses(
 *
 * <p>Validates the file has no more than 1000 rows and that all rows are well-formed.
 *
-* <p><strong>Transaction Behavior:</strong> This method runs within a transaction (inherited from
-* the class-level {@code @Transactional} annotation). Rows that fail validation or parsing are
-* recorded as errors and excluded from the save operation. All successfully validated expenses are
-* saved in a single batch operation using {@link ExpenseRepository#saveAll(Iterable)}. If the
-* database save operation fails for any reason (e.g., database constraints, connection issues),
-* the entire transaction will be rolled back and <strong>none</strong> of the valid expenses will
-* be persisted. This ensures all-or-nothing atomicity for the database persistence phase.
+* <p><strong>Transaction Behavior:</strong> This method processes expenses in batches of 100 rows
+* to provide better fault tolerance and memory efficiency. Each batch is saved independently in
+* a separate transaction using {@link ExpenseRepository#saveAll(Iterable)}. Rows that fail
+* validation or parsing are recorded as errors and excluded from the save operation. If a batch
+* save operation fails (e.g., database constraint violation), only that batch is rolled back;
+* previously saved batches remain committed. This allows partial imports to succeed, reducing
+* the need to re-upload the entire file in case of errors.
+*
 * <p>Note: Leading and trailing whitespace is automatically trimmed from all CSV fields during
 * parsing. Fields containing only whitespace are treated as blank and will fail validation.
 *
@@ -144,7 +146,7 @@ public Page<Expense> searchExpenses(
 */
 public ImportResult importExpenses(InputStream inputStream, User user) {
 	ImportResult result = new ImportResult();
-	List<Expense> expensesToSave = new ArrayList<>();
+	List<Expense> currentBatch = new ArrayList<>();
 	int rowNumber = 0;
 
 	try (Reader reader = new InputStreamReader(inputStream);
@@ -235,7 +237,13 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 					"Row %d: Validation failed: %s", rowNumber, String.join(", ", violationMessages)));
 		}
 
-		expensesToSave.add(expense);
+		currentBatch.add(expense);
+
+		// Save batch when it reaches the batch size
+		if (currentBatch.size() >= BATCH_SIZE) {
+			saveBatch(currentBatch, result);
+			currentBatch.clear();
+		}
 
 		} catch (CsvImportException e) {
 		result.addError(e.getMessage());
@@ -249,10 +257,9 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 	// Set total rows after processing all records
 	result.setTotalRows(rowNumber);
 
-	// Save all valid expenses
-	if (!expensesToSave.isEmpty()) {
-		expenseRepository.saveAll(expensesToSave);
-		result.setSuccessfulImports(expensesToSave.size());
+	// Save any remaining expenses in the last batch
+	if (!currentBatch.isEmpty()) {
+		saveBatch(currentBatch, result);
 	}
 
 	} catch (CsvImportException e) {
@@ -267,6 +274,34 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 	}
 
 	return result;
+}
+
+/**
+* Saves a batch of expenses in a separate transaction.
+*
+* <p>This method is called with REQUIRES_NEW propagation to ensure each batch
+* is saved in its own transaction, independent of other batches. If saving fails,
+* the error is caught and logged, but does not affect other batches.
+*
+* @param batch the list of expenses to save
+* @param result the import result to update with success/failure statistics
+*/
+@Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+protected void saveBatch(List<Expense> batch, ImportResult result) {
+	try {
+		expenseRepository.saveAll(batch);
+		result.setSuccessfulImports(result.getSuccessfulImports() + batch.size());
+	} catch (Exception e) {
+		// Log batch save failure and update result
+		int batchStartRow = result.getSuccessfulImports() + result.getFailedImports() + 1;
+		String errorMsg = String.format(
+			"Batch save failed for rows around %d-%d: %s. These rows were not imported.",
+			batchStartRow,
+			batchStartRow + batch.size() - 1,
+			e.getMessage());
+		result.addError(errorMsg);
+		result.setFailedImports(result.getFailedImports() + batch.size());
+	}
 }
 
 /**
