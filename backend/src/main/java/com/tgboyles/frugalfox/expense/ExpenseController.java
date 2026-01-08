@@ -61,13 +61,14 @@ public ResponseEntity<Expense> createExpense(
 *
 * <p>Expected CSV format: date,merchant,amount,bank,category
 *
-* <p>The file must not exceed 1000 rows. Returns statistics about the import operation including
-* any validation errors encountered.
+* <p>The file must not exceed 1MB in size or 1000 rows. Returns statistics about the import
+* operation including any validation errors encountered.
 *
-* @param file the CSV file to import
+* @param file the CSV file to import (max 1MB)
 * @param user the authenticated user
 * @return import result with statistics and any errors (200 status)
-* @throws CsvImportException if the file is malformed or exceeds row limit (400 status)
+* @throws CsvImportException if the file is malformed, exceeds size limit, or exceeds row limit
+*     (400 status)
 */
 @PostMapping("/import")
 public ResponseEntity<ImportResult> importExpenses(
@@ -77,6 +78,15 @@ public ResponseEntity<ImportResult> importExpenses(
 	// Validate file is present
 	if (file.isEmpty()) {
 	throw new CsvImportException("File is required and cannot be empty");
+	}
+
+	// Validate file size (1MB max to prevent memory issues)
+	long maxFileSize = 1024 * 1024; // 1MB
+	if (file.getSize() > maxFileSize) {
+	throw new CsvImportException(
+		String.format(
+			"File size exceeds maximum limit of %d bytes. File size: %d bytes",
+			maxFileSize, file.getSize()));
 	}
 
 	// Validate content type
