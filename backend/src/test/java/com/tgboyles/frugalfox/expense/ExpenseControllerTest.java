@@ -652,7 +652,7 @@ public void testImportExpensesRowLimitExceeded() throws Exception {
 	for (int i = 1; i <= 1001; i++) {
 		csvContent.append(String.format(
 			"2025-01-%02d,Store %d,%.2f,Chase,Shopping\n",
-			(i % 28) + 1, // Cycle through valid days (1-28)
+			((i - 1) % 31) + 1, // Cycle through valid days (1-31) for January
 			i,
 			10.00 + (i * 0.5)
 		));
