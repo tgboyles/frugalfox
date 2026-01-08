@@ -147,18 +147,18 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 					.setTrim(true)
 					.build())) {
 
-	List<CSVRecord> records = csvParser.getRecords();
+	int recordCount = 0;
 
-	// Check row limit
-	if (records.size() > 1000) {
-		throw new CsvImportException(
-			"File exceeds maximum row limit of 1000. Found " + records.size() + " rows.");
-	}
-
-	result.setTotalRows(records.size());
-
-	for (CSVRecord record : records) {
+	// Iterate through records, counting and validating row limit during parsing
+	for (CSVRecord record : csvParser) {
+		recordCount++;
 		rowNumber = (int) record.getRecordNumber();
+
+		// Check row limit during parsing to fail fast
+		if (recordCount > 1000) {
+		throw new CsvImportException(
+			"File exceeds maximum row limit of 1000. Found at least " + recordCount + " rows.");
+		}
 
 		try {
 		// Validate required fields are present
@@ -233,6 +233,9 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 		result.setFailedImports(result.getFailedImports() + 1);
 		}
 	}
+
+	// Set total rows counted during parsing
+	result.setTotalRows(recordCount);
 
 	// Save all valid expenses
 	if (!expensesToSave.isEmpty()) {
