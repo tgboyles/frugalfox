@@ -126,11 +126,12 @@ public Page<Expense> searchExpenses(
 * <p>Validates the file has no more than 1000 rows and that all rows are well-formed.
 *
 * <p><strong>Transaction Behavior:</strong> This method runs within a transaction (inherited from
-* the class-level {@code @Transactional} annotation). All valid expenses are saved in a single
-* batch operation using {@link ExpenseRepository#saveAll(Iterable)}. If the save operation fails
-* for any reason (e.g., database constraints, connection issues), the entire transaction will be
-* rolled back and <strong>none</strong> of the expenses will be saved. This ensures all-or-nothing
-* atomicity for the bulk import operation.
+* the class-level {@code @Transactional} annotation). Rows that fail validation or parsing are
+* recorded as errors and excluded from the save operation. All successfully validated expenses are
+* saved in a single batch operation using {@link ExpenseRepository#saveAll(Iterable)}. If the
+* database save operation fails for any reason (e.g., database constraints, connection issues),
+* the entire transaction will be rolled back and <strong>none</strong> of the valid expenses will
+* be persisted. This ensures all-or-nothing atomicity for the database persistence phase.
 *
 * @param inputStream the CSV file input stream
 * @param user the user who owns the expenses
