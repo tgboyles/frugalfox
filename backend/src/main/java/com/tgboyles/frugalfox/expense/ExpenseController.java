@@ -4,12 +4,14 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,8 +36,8 @@ import jakarta.validation.Valid;
 @RequestMapping("/expenses")
 public class ExpenseController {
 
-/** Maximum allowed CSV file size in bytes (1MB). Must match spring.servlet.multipart.max-file-size. */
-private static final long MAX_CSV_FILE_SIZE_BYTES = 1024 * 1024; // 1MB
+@Value("${spring.servlet.multipart.max-file-size}")
+private DataSize maxFileSize;
 
 private final ExpenseService expenseService;
 
@@ -64,10 +66,11 @@ public ResponseEntity<Expense> createExpense(
 *
 * <p>Expected CSV format: date,merchant,amount,bank,category
 *
-* <p>The file must not exceed 1MB in size or 1000 rows. Returns statistics about the import
-* operation including any validation errors encountered.
+* <p>The file must not exceed the configured maximum size (spring.servlet.multipart.max-file-size)
+* or 1000 rows. Returns statistics about the import operation including any validation errors
+* encountered.
 *
-* @param file the CSV file to import (max 1MB)
+* @param file the CSV file to import
 * @param user the authenticated user
 * @return import result with statistics and any errors (200 status)
 * @throws CsvImportException if the file is malformed, exceeds size limit, or exceeds row limit
@@ -84,11 +87,12 @@ public ResponseEntity<ImportResult> importExpenses(
 	}
 
 	// Validate file size to prevent memory exhaustion attacks
-	if (file.getSize() > MAX_CSV_FILE_SIZE_BYTES) {
+	long maxFileSizeBytes = maxFileSize.toBytes();
+	if (file.getSize() > maxFileSizeBytes) {
 	throw new CsvImportException(
 		String.format(
 			"File size exceeds maximum limit of %d bytes. File size: %d bytes",
-			MAX_CSV_FILE_SIZE_BYTES, file.getSize()));
+			maxFileSizeBytes, file.getSize()));
 	}
 
 	// Validate content type (allow common CSV MIME types across platforms)
