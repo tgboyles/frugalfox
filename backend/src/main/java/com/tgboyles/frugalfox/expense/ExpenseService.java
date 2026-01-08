@@ -298,6 +298,12 @@ protected void saveBatch(List<Expense> batch, List<Integer> rowNumbers, ImportRe
 		return;
 	}
 
+	// Ensure batch and rowNumbers are in sync
+	if (batch.size() != rowNumbers.size()) {
+		throw new IllegalStateException(
+			"Batch size and row numbers size mismatch: " + batch.size() + " vs " + rowNumbers.size());
+	}
+
 	try {
 		expenseRepository.saveAll(batch);
 		result.setSuccessfulImports(result.getSuccessfulImports() + batch.size());
@@ -305,11 +311,18 @@ protected void saveBatch(List<Expense> batch, List<Integer> rowNumbers, ImportRe
 		// Database error occurred during batch save
 		int firstRow = rowNumbers.get(0);
 		int lastRow = rowNumbers.get(rowNumbers.size() - 1);
+
+		// Get error message, falling back to general message if specific cause is unavailable
+		Throwable cause = e.getMostSpecificCause();
+		String errorMessage = (cause != null && cause.getMessage() != null)
+			? cause.getMessage()
+			: e.getMessage();
+
 		String errorMsg = String.format(
 			"Batch save failed for rows %d-%d: %s. These rows were not imported.",
 			firstRow,
 			lastRow,
-			e.getMostSpecificCause().getMessage());
+			errorMessage);
 		result.addError(errorMsg);
 		result.setFailedImports(result.getFailedImports() + batch.size());
 	}
