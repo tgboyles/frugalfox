@@ -8,6 +8,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.mockito.ArgumentCaptor;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -15,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -209,7 +212,31 @@ public void testImportExpensesSuccess() {
 	assertThat(result.getSuccessfulImports()).isEqualTo(2);
 	assertThat(result.getFailedImports()).isEqualTo(0);
 	assertThat(result.getErrors()).isEmpty();
-	verify(expenseRepository).saveAll(any());
+
+	// Capture and verify the expenses that were saved
+	ArgumentCaptor<List<Expense>> expenseListCaptor = ArgumentCaptor.forClass(List.class);
+	verify(expenseRepository).saveAll(expenseListCaptor.capture());
+
+	List<Expense> savedExpenses = expenseListCaptor.getValue();
+	assertThat(savedExpenses).hasSize(2);
+
+	// Verify first expense from CSV (Whole Foods)
+	Expense firstExpense = savedExpenses.get(0);
+	assertThat(firstExpense.getDate()).isEqualTo(LocalDate.of(2025, 1, 1));
+	assertThat(firstExpense.getMerchant()).isEqualTo("Whole Foods");
+	assertThat(firstExpense.getAmount()).isEqualByComparingTo(new BigDecimal("50.00"));
+	assertThat(firstExpense.getBank()).isEqualTo("Chase");
+	assertThat(firstExpense.getCategory()).isEqualTo("Groceries");
+	assertThat(firstExpense.getUser()).isEqualTo(testUser);
+
+	// Verify second expense from CSV (Target)
+	Expense secondExpense = savedExpenses.get(1);
+	assertThat(secondExpense.getDate()).isEqualTo(LocalDate.of(2025, 1, 2));
+	assertThat(secondExpense.getMerchant()).isEqualTo("Target");
+	assertThat(secondExpense.getAmount()).isEqualByComparingTo(new BigDecimal("75.50"));
+	assertThat(secondExpense.getBank()).isEqualTo("BofA");
+	assertThat(secondExpense.getCategory()).isEqualTo("Shopping");
+	assertThat(secondExpense.getUser()).isEqualTo(testUser);
 }
 
 @Test
