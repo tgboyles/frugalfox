@@ -176,12 +176,12 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 		String bank = record.get("bank");
 		String category = record.get("category");
 
-		// Validate non-empty
-		if (dateStr.isBlank()
-			|| merchant.isBlank()
-			|| amountStr.isBlank()
-			|| bank.isBlank()
-			|| category.isBlank()) {
+		// Validate non-null and non-empty
+		if (dateStr == null || dateStr.isBlank()
+			|| merchant == null || merchant.isBlank()
+			|| amountStr == null || amountStr.isBlank()
+			|| bank == null || bank.isBlank()
+			|| category == null || category.isBlank()) {
 			throw new CsvImportException(
 				String.format("Row %d: All fields are required and cannot be blank", rowNumber));
 		}
