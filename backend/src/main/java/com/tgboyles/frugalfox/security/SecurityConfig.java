@@ -49,7 +49,7 @@ public SecurityFilterChain filterChain(
 	// CSRF protection is disabled because this application uses JWT-based stateless authentication.
 	// CSRF attacks rely on session cookies, which are not used in this architecture.
 	// JWTs are stored client-side and sent via Authorization header, not cookies.
-	// lgtm[java/spring-disabled-csrf-protection]
+	// codeql[java/spring-disabled-csrf-protection]
 	http.csrf(csrf -> csrf.disable())
 		.cors(cors -> cors.configurationSource(corsConfigurationSource()))
 		.authorizeHttpRequests(
