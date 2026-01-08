@@ -57,11 +57,11 @@ export default function AuthPage() {
         await register(username, password, email);
       }
       navigate('/dashboard');
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-        `Failed to ${isLogin ? 'login' : 'register'}. Please try again.`
-      );
+    } catch (err: unknown) {
+      const errorMessage =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        `Failed to ${isLogin ? 'login' : 'register'}. Please try again.`;
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
