@@ -125,6 +125,9 @@ public Page<Expense> searchExpenses(
 *
 * <p>Validates the file has no more than 1000 rows and that all rows are well-formed.
 *
+* <p>Note: Leading and trailing whitespace is automatically trimmed from all CSV fields during
+* parsing. Fields containing only whitespace are treated as blank and will fail validation.
+*
 * @param inputStream the CSV file input stream
 * @param user the user who owns the expenses
 * @return import result with statistics and any errors
