@@ -7,6 +7,7 @@ This document provides AI coding assistants with context about the Frugal Fox pr
 Frugal Fox is a full-stack expense tracking application with a JWT-authenticated REST API backend and a modern React frontend. The application provides secure user registration, authentication, and multi-tenant expense management with advanced search capabilities.
 
 **Backend Technologies:**
+
 - Spring Boot 4.0.1 (Spring MVC, Spring Data JPA, Spring Security)
 - PostgreSQL 17 (production) / H2 (testing)
 - Flyway for database migrations
@@ -16,6 +17,7 @@ Frugal Fox is a full-stack expense tracking application with a JWT-authenticated
 - Java 23
 
 **Frontend Technologies:**
+
 - React 19 with TypeScript
 - Vite (build tool)
 - React Router v7 (routing)
@@ -27,6 +29,7 @@ Frugal Fox is a full-stack expense tracking application with a JWT-authenticated
 - pnpm (package manager)
 
 **Infrastructure:**
+
 - Docker & Docker Compose for deployment
 - CORS configured for frontend-backend communication
 
@@ -74,6 +77,7 @@ frugal_fox/
 ### Frontend Code Style and Conventions
 
 1. **Technology Stack Standards**
+
    - **ALWAYS use React 19** with TypeScript for all frontend development
    - **ALWAYS use Vite** as the build tool (NOT Create React App or other bundlers)
    - **ALWAYS use React Router v7** for routing (NOT reach-router or older versions)
@@ -85,6 +89,7 @@ frugal_fox/
    - **ALWAYS use pnpm** for package management (NOT npm or yarn)
 
 2. **Component Patterns**
+
    - Use functional components with hooks (NO class components)
    - Prefer named exports for contexts, utilities, and non-page components
    - Use default exports for page components
@@ -92,6 +97,7 @@ frugal_fox/
    - Use kebab-case for utility files (e.g., `api.ts`, `utils.ts`)
 
 3. **File Organization**
+
    - Group by feature/type: `components/`, `pages/`, `contexts/`, `lib/`
    - UI components from shadcn go in `components/ui/`
    - Custom reusable components go in `components/`
@@ -103,6 +109,7 @@ frugal_fox/
      - [lib/utils.ts](frontend/src/lib/utils.ts) - Utility functions
 
 4. **TypeScript Standards**
+
    - Use strict mode TypeScript
    - Properly type all component props, function parameters, and return values
    - Use `type` for object shapes, `interface` for extensible contracts
@@ -117,6 +124,7 @@ frugal_fox/
    - See [DashboardHome.tsx](frontend/src/pages/DashboardHome.tsx) for proper type usage example
 
 5. **Styling with Tailwind**
+
    - Use Tailwind utility classes directly in JSX
    - Use the configured theme colors (primary, accent, etc.) from `index.css`
    - Accent color: `oklch(0.67 0.16 58)` (vibrant orange/amber)
@@ -124,6 +132,7 @@ frugal_fox/
    - Use `cn()` utility from `lib/utils.ts` for conditional classes
 
 6. **State Management**
+
    - Use TanStack Query for server state (data from API)
    - Use React Context for global client state (auth, theme)
    - Use local component state (`useState`) for UI-only state
@@ -138,12 +147,15 @@ frugal_fox/
 ### Backend Code Style and Conventions
 
 1. **Follow Existing Patterns**
+
    - Use the existing service-repository-controller layering
    - Place business logic in service classes, not controllers
    - Use DTOs for request/response objects (see [security/](backend/src/main/java/com/tgboyles/frugalfox/security/) package)
    - Follow Google Java Style Guide conventions
+   - Always please the com.diffplug.spotless linting / formatting rules
 
 2. **Naming Conventions**
+
    - Entities: singular nouns (e.g., `User`, `Expense`)
    - Controllers: `[Entity]Controller` (e.g., [ExpenseController.java](backend/src/main/java/com/tgboyles/frugalfox/expense/ExpenseController.java))
    - Services: `[Entity]Service` (e.g., [ExpenseService.java](backend/src/main/java/com/tgboyles/frugalfox/expense/ExpenseService.java))
@@ -160,21 +172,25 @@ frugal_fox/
 **CRITICAL**: This application handles user authentication and data isolation. Always adhere to these security principles:
 
 1. **User Isolation**
+
    - NEVER expose data across users
    - Always filter queries by authenticated user: `@AuthenticationPrincipal User user`
    - See [ExpenseController.java:37-52](backend/src/main/java/com/tgboyles/frugalfox/expense/ExpenseController.java#L37-L52) for the pattern
 
 2. **Authentication**
+
    - All `/expenses/**` endpoints require JWT authentication
    - Public endpoints: `/auth/**`, `/actuator/health`, `/`
    - JWT configuration in [JwtUtil.java](backend/src/main/java/com/tgboyles/frugalfox/security/JwtUtil.java)
 
 3. **Validation**
+
    - Use Bean Validation annotations on entities (`@NotNull`, `@Positive`, `@PastOrPresent`)
    - Add `@Valid` to controller method parameters
    - See [Expense.java](backend/src/main/java/com/tgboyles/frugalfox/expense/Expense.java) for validation examples
 
 4. **Password Storage**
+
    - Always use BCrypt via `PasswordEncoder`
    - Never log or expose passwords
    - Configuration in [SecurityConfig.java](backend/src/main/java/com/tgboyles/frugalfox/security/SecurityConfig.java)
@@ -187,18 +203,21 @@ frugal_fox/
 ### Database and Persistence
 
 1. **Flyway Migrations**
+
    - ALL schema changes MUST be versioned migrations in `backend/src/main/resources/db/migration/`
    - Naming: `V{version}__{description}.sql` (e.g., `V3__add_expense_notes_column.sql`)
    - Never modify existing migrations - create new ones
    - Test migrations in both PostgreSQL (production) and H2 (test)
 
 2. **Entity Design**
+
    - Use `@GeneratedValue(strategy = GenerationType.IDENTITY)` for primary keys
    - Include `createdAt` and `updatedAt` audit fields with `@CreationTimestamp` and `@UpdateTimestamp`
    - Add foreign key constraints with `ON DELETE CASCADE` where appropriate
    - Example: [Expense.java](backend/src/main/java/com/tgboyles/frugalfox/expense/Expense.java)
 
 3. **Repository Patterns**
+
    - Extend `JpaRepository<Entity, Long>`
    - Use `JpaSpecificationExecutor` for dynamic queries (see [ExpenseRepository.java](backend/src/main/java/com/tgboyles/frugalfox/expense/ExpenseRepository.java))
    - Create specifications in service layer for complex queries (see [ExpenseService.java:51-83](backend/src/main/java/com/tgboyles/frugalfox/expense/ExpenseService.java#L51-L83))
@@ -210,16 +229,19 @@ frugal_fox/
 ### API Design
 
 1. **RESTful Conventions**
+
    - Use standard HTTP methods: GET (read), POST (create), PUT (update), DELETE (delete)
    - Return appropriate status codes: 200 (OK), 201 (Created), 204 (No Content), 400 (Bad Request), 401 (Unauthorized), 403 (Forbidden), 404 (Not Found)
    - Use plural nouns for collections: `/expenses`, not `/expense`
 
 2. **Request/Response Format**
+
    - Accept and return JSON with `application/json` content type
    - Use DTOs for complex request bodies (validation, transformation)
    - Return consistent error format via [ErrorResponse.java](backend/src/main/java/com/tgboyles/frugalfox/common/ErrorResponse.java)
 
 3. **Pagination and Sorting**
+
    - Use Spring Data's `Pageable` for collection endpoints
    - Default: 20 items per page, sorted by date descending
    - Query params: `page`, `size`, `sort` (e.g., `?page=0&size=50&sort=amount,desc`)
@@ -234,17 +256,20 @@ frugal_fox/
 ### Testing Requirements
 
 1. **Test Coverage**
+
    - Write tests for all new features and bug fixes
    - Unit tests for service layer (mock repositories)
    - Integration tests for controllers (MockMvc + SpringBootTest)
    - See existing tests in `src/test/java/com/tgboyles/frugalfox/`
 
 2. **Test Database**
+
    - Tests use H2 in-memory database with PostgreSQL compatibility mode
    - Flyway migrations run in test profile to validate schema
    - Configuration in `src/test/resources/application.properties`
 
 3. **Test Organization**
+
    - Name tests clearly: `shouldReturnExpenseWhenUserOwnsIt()`
    - Use `@SpringBootTest` for integration tests
    - Use `@MockBean` for unit tests with mocked dependencies
@@ -260,12 +285,14 @@ frugal_fox/
 #### Frontend Development
 
 1. **Environment Setup**
+
    - Install dependencies: `cd frontend && pnpm install`
    - Copy environment file: `cp .env.example .env`
    - Configure API URL in `.env`: `VITE_API_BASE_URL=http://localhost:8080`
    - Start dev server: `pnpm dev` (runs on http://localhost:5173)
 
 2. **Making Changes**
+
    - Read existing code before modifying
    - Follow existing patterns in similar components
    - Use shadcn components where possible: `pnpm dlx shadcn@latest add [component-name]`
@@ -273,6 +300,7 @@ frugal_fox/
    - Build to verify no TypeScript errors: `pnpm build`
 
 3. **Adding New Pages**
+
    - Create page component in `pages/` directory
    - Add route in [App.tsx](frontend/src/App.tsx)
    - Wrap with `<ProtectedRoute>` if authentication required
@@ -288,17 +316,20 @@ frugal_fox/
 #### Backend Development
 
 1. **Environment Setup**
+
    - Prefer Docker Compose for full stack: `docker compose up --build --force-recreate`. ALWAYS FORCE_RECREATE!
    - Use database-only mode for local development: `docker compose up -d postgres`
    - Run backend locally: `cd backend && mvn spring-boot:run`
 
 2. **Making Changes**
+
    - Read existing code before modifying (use Read tool on relevant files)
    - Follow existing patterns in similar classes
    - Update tests to reflect changes
    - Run tests before considering work complete: `mvn test`
 
 3. **Database Changes**
+
    - Create new Flyway migration for schema changes
    - Test migration against both PostgreSQL and H2
    - Update entity classes to reflect schema changes
@@ -317,11 +348,13 @@ frugal_fox/
 ### Configuration Management
 
 1. **Application Properties**
+
    - Production config: `backend/src/main/resources/application.properties`
    - Test config: `backend/src/test/resources/application.properties`
    - Use environment variables for sensitive data (database credentials, JWT secret)
 
 2. **JWT Configuration**
+
    - Secret key: `jwt.secret` (256-bit minimum)
    - Expiration: `jwt.expiration` (milliseconds, default 24 hours)
    - Update in application.properties or via environment variables
@@ -333,15 +366,18 @@ frugal_fox/
 ### Common Patterns and Idioms
 
 1. **Dependency Injection**
+
    - Use constructor injection (preferred) or field injection with `@Autowired`
    - Use `@Lazy` to break circular dependencies (see [SecurityConfig.java:45](backend/src/main/java/com/tgboyles/frugalfox/security/SecurityConfig.java#L45))
 
 2. **Exception Handling**
+
    - Create custom exceptions extending `RuntimeException` (see [ExpenseNotFoundException.java](backend/src/main/java/com/tgboyles/frugalfox/expense/ExpenseNotFoundException.java))
    - Handle in [GlobalExceptionHandler.java](backend/src/main/java/com/tgboyles/frugalfox/common/GlobalExceptionHandler.java) with `@ExceptionHandler`
    - Return consistent `ErrorResponse` objects
 
 3. **Authentication Principal**
+
    - Access authenticated user: `@AuthenticationPrincipal User user`
    - Get user ID: `user.getId()`
    - This is automatically populated by Spring Security after JWT validation
@@ -355,18 +391,21 @@ frugal_fox/
 ### Anti-Patterns to Avoid
 
 1. **Security**
+
    - Never expose other users' data
    - Never skip authentication for sensitive endpoints
    - Never log sensitive data (passwords, tokens)
    - Never trust client input without validation
 
 2. **Database**
+
    - Never modify existing Flyway migrations
    - Never use SQL directly in controllers
    - Never expose database implementation details to clients
    - Never use N+1 queries (use JOIN FETCH or projections)
 
 3. **Code Quality**
+
    - Don't put business logic in controllers
    - Don't repeat yourself (extract common logic to services/utilities)
    - Don't use magic numbers (use constants or application properties)
@@ -415,6 +454,7 @@ curl http://localhost:5173                  # Frontend (dev mode)
 ### When to Ask for Clarification
 
 Ask the user before:
+
 - Making breaking changes to existing APIs
 - Adding new dependencies to pom.xml or package.json
 - Modifying security configurations
@@ -427,6 +467,7 @@ Ask the user before:
 ### References
 
 **Backend:**
+
 - Full API documentation and examples: [README.md](README.md)
 - Spring Boot reference: https://docs.spring.io/spring-boot/reference/
 - Spring Security: https://docs.spring.io/spring-security/reference/
@@ -435,6 +476,7 @@ Ask the user before:
 - Google Java Style Guide: https://google.github.io/styleguide/javaguide.html
 
 **Frontend:**
+
 - Frontend documentation: [frontend/README.md](frontend/README.md)
 - React documentation: https://react.dev
 - TypeScript documentation: https://www.typescriptlang.org/docs/
@@ -443,4 +485,4 @@ Ask the user before:
 - TanStack Query: https://tanstack.com/query/latest
 - shadcn/ui: https://ui.shadcn.com
 - Tailwind CSS v4: https://tailwindcss.com
-- Radix UI: https://www.radix-ui.com 
+- Radix UI: https://www.radix-ui.com

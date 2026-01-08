@@ -15,6 +15,7 @@ REST API for expense tracking with JWT authentication and multi-tenant data isol
   - Spring Data JPA (persistence)
   - Spring Security (authentication/authorization)
   - Bean Validation (input validation)
+  - Apache Commons CSV 1.11.0 (bulk import)
 
 ## Quick Start
 
@@ -104,10 +105,12 @@ The test suite includes:
 src/main/java/com/tgboyles/frugalfox/
 ├── expense/                 # Core domain: expense tracking
 │   ├── Expense.java         # Entity with validation
-│   ├── ExpenseController.java       # REST endpoints (CRUD + search)
-│   ├── ExpenseService.java          # Business logic with JPA Specifications
+│   ├── ExpenseController.java       # REST endpoints (CRUD + search + import)
+│   ├── ExpenseService.java          # Business logic with JPA Specifications + CSV import
 │   ├── ExpenseRepository.java       # JpaRepository + JpaSpecificationExecutor
 │   ├── ExpenseSearchCriteria.java   # DTO for dynamic queries
+│   ├── ImportResult.java            # DTO for CSV import response
+│   ├── CsvImportException.java      # CSV import validation exception
 │   └── ExpenseNotFoundException.java
 │
 ├── user/                    # User management
@@ -238,7 +241,12 @@ curl -X POST http://localhost:8080/expenses \
   -H "Content-Type: application/json" \
   -d '{"date": "2025-12-26", "merchant": "Whole Foods", "amount": 125.50, "bank": "Chase", "category": "Groceries"}'
 
-# 4. List all expenses
+# 4. Or bulk import from CSV
+curl -X POST http://localhost:8080/expenses/import \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@backend/sample-expenses.csv"
+
+# 5. List all expenses
 curl http://localhost:8080/expenses -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -266,11 +274,12 @@ POST /auth/login     # Login with credentials
 
 **Expenses** (Protected - requires JWT):
 ```
-GET    /expenses       # List/search expenses (with filters)
-POST   /expenses       # Create expense
-GET    /expenses/{id}  # Get expense by ID
-PUT    /expenses/{id}  # Update expense
-DELETE /expenses/{id}  # Delete expense
+GET    /expenses          # List/search expenses (with filters)
+POST   /expenses          # Create expense
+POST   /expenses/import   # Bulk import expenses from CSV
+GET    /expenses/{id}     # Get expense by ID
+PUT    /expenses/{id}     # Update expense
+DELETE /expenses/{id}     # Delete expense
 ```
 
 **Search Filters:**
@@ -285,6 +294,59 @@ DELETE /expenses/{id}  # Delete expense
 curl "http://localhost:8080/expenses?category=Groceries&startDate=2025-01-01&page=0&size=20" \
   -H "Authorization: Bearer $TOKEN"
 ```
+
+### Bulk Import from CSV
+
+Import multiple expenses at once using a CSV file:
+
+**CSV Format:**
+```csv
+date,merchant,amount,bank,category
+2025-01-01,Whole Foods,125.50,Chase,Groceries
+2025-01-02,Shell Gas Station,45.00,Chase,Transportation
+2025-01-03,Target,75.00,BofA,Shopping
+```
+
+**Requirements:**
+- Maximum 1000 rows per file
+- CSV header must be: `date,merchant,amount,bank,category`
+- Date format: ISO 8601 (YYYY-MM-DD)
+- Amount must be a positive number
+- All fields are required and cannot be blank
+- Same validation rules as single expense creation
+
+**Example Request:**
+```bash
+curl -X POST http://localhost:8080/expenses/import \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@expenses.csv"
+```
+
+**Response:**
+```json
+{
+  "totalRows": 3,
+  "successfulImports": 3,
+  "failedImports": 0,
+  "errors": []
+}
+```
+
+**Partial Success Example:**
+If some rows fail validation, valid rows are still imported:
+```json
+{
+  "totalRows": 5,
+  "successfulImports": 4,
+  "failedImports": 1,
+  "errors": [
+    "Row 3: Invalid date format '2025-13-01'. Expected ISO format (YYYY-MM-DD)"
+  ]
+}
+```
+
+**Sample CSV File:**
+A sample CSV file is available at `backend/sample-expenses.csv` for testing.
 
 ## Configuration
 

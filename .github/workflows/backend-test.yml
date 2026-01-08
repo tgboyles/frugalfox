@@ -1,0 +1,42 @@
+name: Backend Test & Format
+
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-test.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-test.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-format:
+    name: Maven Test & Spotless Check
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '23'
+          cache: 'maven'
+
+      - name: Run tests
+        run: mvn clean test
+
+      - name: Check code formatting
+        run: mvn spotless:check
