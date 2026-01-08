@@ -167,9 +167,9 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 		rowNumber = (int) record.getRecordNumber();
 
 		// Check row limit during parsing to fail fast
-		if (recordCount > 1000) {
+		if (recordCount > MAX_IMPORT_ROWS) {
 		throw new CsvImportException(
-			"File exceeds maximum row limit of 1000. Found at least " + recordCount + " rows.");
+			"File exceeds maximum row limit of " + MAX_IMPORT_ROWS + ". Found at least " + recordCount + " rows.");
 		}
 
 		try {
