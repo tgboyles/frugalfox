@@ -286,7 +286,7 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 *
 * <p>This method is called with REQUIRES_NEW propagation to ensure each batch
 * is saved in its own transaction, independent of other batches. If saving fails,
-* the error is caught and logged, but does not affect other batches.
+* the error is caught and recorded in the result, but does not affect other batches.
 *
 * @param batch the list of expenses to save
 * @param rowNumbers the row numbers corresponding to each expense in the batch
@@ -294,13 +294,17 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 */
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 protected void saveBatch(List<Expense> batch, List<Integer> rowNumbers, ImportResult result) {
+	if (batch.isEmpty()) {
+		return;
+	}
+
 	try {
 		expenseRepository.saveAll(batch);
 		result.setSuccessfulImports(result.getSuccessfulImports() + batch.size());
 	} catch (DataAccessException e) {
 		// Database error occurred during batch save
-		int firstRow = rowNumbers.isEmpty() ? 0 : rowNumbers.get(0);
-		int lastRow = rowNumbers.isEmpty() ? 0 : rowNumbers.get(rowNumbers.size() - 1);
+		int firstRow = rowNumbers.get(0);
+		int lastRow = rowNumbers.get(rowNumbers.size() - 1);
 		String errorMsg = String.format(
 			"Batch save failed for rows %d-%d: %s. These rows were not imported.",
 			firstRow,
