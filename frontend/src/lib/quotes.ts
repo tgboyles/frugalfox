@@ -1,4 +1,9 @@
-export const QUOTES = [
+export interface Quote {
+  text: string;
+  author: string;
+}
+
+export const QUOTES: Quote[] = [
   { text: "A penny saved is a penny earned.", author: "Benjamin Franklin" },
   { text: "Beware of little expenses; a small leak will sink a great ship.", author: "Benjamin Franklin" },
   { text: "Do not save what is left after spending, but spend what is left after saving.", author: "Warren Buffett" },
