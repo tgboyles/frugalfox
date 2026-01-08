@@ -22,8 +22,10 @@ const COLORS = [
 
 export default function DashboardHome() {
   const { data: expensesData, isLoading } = useQuery({
-    queryKey: ['expenses', { page: 0, size: 1000 }], // Fetch more for better analytics
+    queryKey: ['expenses', { page: 0, size: 1000 }],
     queryFn: () => expenseApi.getExpenses({ page: 0, size: 1000 }),
+    // Note: Fetching 1000 records for comprehensive analytics.
+    // For production with large datasets, consider implementing server-side aggregation
   });
 
   const expenses = expensesData?.data.content || [];
@@ -59,7 +61,9 @@ export default function DashboardHome() {
     value: Number((value as number).toFixed(2)),
   }));
 
-  // Separate income and expenses (assuming negative amounts are income/refunds)
+  // Separate income and expenses
+  // Business logic: Negative amounts represent income/refunds (e.g., returns, reimbursements)
+  // Positive amounts represent regular expenses
   const incomeExpenseData = expenses.reduce(
     (acc: { income: number; expenses: number }, expense: Expense) => {
       if (expense.amount < 0) {
