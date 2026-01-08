@@ -299,7 +299,7 @@ public void testImportExpensesBlankFields() {
 	assertThat(result.getSuccessfulImports()).isEqualTo(0);
 	assertThat(result.getFailedImports()).isEqualTo(1);
 	assertThat(result.getErrors()).hasSize(1);
-	assertThat(result.getErrors().get(0)).contains("cannot be blank");
+	assertThat(result.getErrors().get(0)).contains("cannot be null or blank");
 }
 
 @Test
