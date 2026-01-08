@@ -1,5 +1,6 @@
 package com.tgboyles.frugalfox.expense;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -476,7 +477,7 @@ public void testImportExpensesFileSizeExceeded() throws Exception {
 				.file(file)
 				.header("Authorization", "Bearer " + authToken))
 		.andExpect(status().isBadRequest())
-		.andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("File size exceeds maximum limit")));
+		.andExpect(jsonPath("$.message").value(containsString("File size exceeds maximum limit")));
 }
 
 @Test
@@ -499,7 +500,7 @@ public void testImportExpensesInvalidContentType() throws Exception {
 				.file(file)
 				.header("Authorization", "Bearer " + authToken))
 		.andExpect(status().isBadRequest())
-		.andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("Invalid file type")));
+		.andExpect(jsonPath("$.message").value(containsString("Invalid file type")));
 }
 
 @Test
@@ -528,7 +529,7 @@ public void testImportExpensesPartialSuccess() throws Exception {
 		.andExpect(jsonPath("$.successfulImports").value(2))
 		.andExpect(jsonPath("$.failedImports").value(1))
 		.andExpect(jsonPath("$.errors", hasSize(1)))
-		.andExpect(jsonPath("$.errors[0]").value(org.hamcrest.Matchers.containsString("Invalid date format")));
+		.andExpect(jsonPath("$.errors[0]").value(containsString("Invalid date format")));
 
 	// Verify only valid expenses were saved
 	mvc.perform(
