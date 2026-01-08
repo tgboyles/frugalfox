@@ -1,5 +1,6 @@
 package com.tgboyles.frugalfox.common;
 
+import com.tgboyles.frugalfox.expense.CsvImportException;
 import com.tgboyles.frugalfox.expense.ExpenseNotFoundException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -92,6 +93,19 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
     ErrorResponse error =
         new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Bad Request", ex.getMessage());
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+  }
+
+  /**
+   * Handles CSV import validation failures.
+   *
+   * @param ex the exception
+   * @return error response with 400 status
+   */
+  @ExceptionHandler(CsvImportException.class)
+  public ResponseEntity<ErrorResponse> handleCsvImportError(CsvImportException ex) {
+    ErrorResponse error =
+        new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "CSV Import Error", ex.getMessage());
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
   }
 

@@ -162,6 +162,36 @@
 					"response": []
 				},
 				{
+					"name": "Import Expenses from CSV",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/backend/sample-expenses.csv",
+									"description": "CSV file with format: date,merchant,amount,bank,category"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/expenses/import",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"expenses",
+								"import"
+							]
+						},
+						"description": "Bulk import expenses from a CSV file.\n\n**CSV Format**:\n```csv\ndate,merchant,amount,bank,category\n2025-01-01,Whole Foods,125.50,Chase,Groceries\n2025-01-02,Target,75.00,BofA,Shopping\n```\n\n**Validation Rules**:\n- Maximum 1000 rows per file\n- Date format: ISO 8601 (YYYY-MM-DD)\n- All fields are required and cannot be blank\n- Amount must be a positive number\n- Same validation rules as single expense creation\n\n**Response**: Import statistics with any errors\n```json\n{\n  \"totalRows\": 5,\n  \"successfulImports\": 5,\n  \"failedImports\": 0,\n  \"errors\": []\n}\n```\n\n**Partial Success**: If some rows fail validation, valid rows are still imported and errors are returned with row numbers.\n\n**Note**: A sample CSV file is available at `/backend/sample-expenses.csv`"
+					},
+					"response": []
+				},
+				{
 					"name": "Get Expense by ID",
 					"request": {
 						"method": "GET",

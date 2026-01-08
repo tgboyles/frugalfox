@@ -2,6 +2,7 @@ package com.tgboyles.frugalfox.expense;
 
 import com.tgboyles.frugalfox.user.User;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import org.springframework.data.domain.Page;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * REST controller for expense operations.
@@ -49,6 +51,41 @@ public class ExpenseController {
     return ResponseEntity.status(HttpStatus.CREATED)
         .header("Location", "/expenses/" + created.getId())
         .body(created);
+  }
+
+  /**
+   * Imports expenses from a CSV file for the authenticated user.
+   *
+   * <p>Expected CSV format: date,merchant,amount,bank,category
+   *
+   * <p>The file must not exceed 1000 rows. Returns statistics about the import operation including
+   * any validation errors encountered.
+   *
+   * @param file the CSV file to import
+   * @param user the authenticated user
+   * @return import result with statistics and any errors (200 status)
+   * @throws CsvImportException if the file is malformed or exceeds row limit (400 status)
+   */
+  @PostMapping("/import")
+  public ResponseEntity<ImportResult> importExpenses(
+      @RequestParam("file") MultipartFile file, @AuthenticationPrincipal User user)
+      throws IOException {
+
+    // Validate file is present
+    if (file.isEmpty()) {
+      throw new CsvImportException("File is required and cannot be empty");
+    }
+
+    // Validate content type
+    String contentType = file.getContentType();
+    if (contentType == null
+        || (!contentType.equals("text/csv") && !contentType.equals("application/csv"))) {
+      throw new CsvImportException(
+          "Invalid file type. Expected CSV file (text/csv), but got: " + contentType);
+    }
+
+    ImportResult result = expenseService.importExpenses(file.getInputStream(), user);
+    return ResponseEntity.ok(result);
   }
 
   /**
