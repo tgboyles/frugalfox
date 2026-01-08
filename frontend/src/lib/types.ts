@@ -59,3 +59,10 @@ export type ErrorResponse = {
   message: string;
   path: string;
 };
+
+export type ImportResult = {
+  totalRows: number;
+  successfulImports: number;
+  failedImports: number;
+  errors: string[];
+};

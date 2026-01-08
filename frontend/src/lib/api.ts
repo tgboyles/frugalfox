@@ -79,4 +79,14 @@ export const expenseApi = {
   ) => api.put(`/expenses/${id}`, expense),
 
   deleteExpense: (id: number) => api.delete(`/expenses/${id}`),
+
+  importExpenses: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/expenses/import', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
 };
