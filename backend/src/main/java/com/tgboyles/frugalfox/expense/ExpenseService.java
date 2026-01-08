@@ -183,7 +183,7 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 			|| bank == null || bank.isBlank()
 			|| category == null || category.isBlank()) {
 			throw new CsvImportException(
-				String.format("Row %d: All fields are required and cannot be blank", rowNumber));
+				String.format("Row %d: All fields are required and cannot be null or blank", rowNumber));
 		}
 
 		// Parse date
