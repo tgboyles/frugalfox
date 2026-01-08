@@ -134,6 +134,7 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 	ImportResult result = new ImportResult();
 	List<Expense> expensesToSave = new ArrayList<>();
 	int rowNumber = 0;
+	int totalRows = 0;
 
 	try (Reader reader = new InputStreamReader(inputStream);
 		CSVParser csvParser =
@@ -147,18 +148,16 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 					.setTrim(true)
 					.build())) {
 
-	List<CSVRecord> records = csvParser.getRecords();
-
-	// Check row limit
-	if (records.size() > 1000) {
-		throw new CsvImportException(
-			"File exceeds maximum row limit of 1000. Found " + records.size() + " rows.");
-	}
-
-	result.setTotalRows(records.size());
-
-	for (CSVRecord record : records) {
+	// Stream records one at a time instead of loading all into memory
+	for (CSVRecord record : csvParser) {
 		rowNumber = (int) record.getRecordNumber();
+		totalRows++;
+
+		// Check row limit during streaming
+		if (totalRows > 1000) {
+			throw new CsvImportException(
+				"File exceeds maximum row limit of 1000. Found more than " + totalRows + " rows.");
+		}
 
 		try {
 		// Validate required fields are present
@@ -233,6 +232,9 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 		result.setFailedImports(result.getFailedImports() + 1);
 		}
 	}
+
+	// Set total rows after processing all records
+	result.setTotalRows(totalRows);
 
 	// Save all valid expenses
 	if (!expensesToSave.isEmpty()) {
