@@ -63,7 +63,7 @@ export const expenseApi = {
     amount: number;
     category: string;
     merchant: string;
-    expenseDate: string;
+    date: string;
     bank?: string;
   }) => api.post('/expenses', expense),
 
@@ -73,7 +73,7 @@ export const expenseApi = {
       amount: number;
       category: string;
       merchant: string;
-      expenseDate: string;
+      date: string;
       bank?: string;
     }
   ) => api.put(`/expenses/${id}`, expense),
