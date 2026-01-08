@@ -59,7 +59,7 @@ export default function AuthPage() {
       navigate('/dashboard');
     } catch (err: unknown) {
       const errorMessage =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
         `Failed to ${isLogin ? 'login' : 'register'}. Please try again.`;
       setError(errorMessage);
     } finally {
