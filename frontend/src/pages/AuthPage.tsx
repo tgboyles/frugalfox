@@ -58,11 +58,10 @@ export default function AuthPage() {
         await register(username, password, email);
       }
       navigate('/dashboard');
-    } catch (err) {
-      let errorMessage = `Failed to ${isLogin ? 'login' : 'register'}. Please try again.`;
-      if (axios.isAxiosError(err) && err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      }
+    } catch (err: unknown) {
+      const errorMessage =
+        (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+        `Failed to ${isLogin ? 'login' : 'register'}. Please try again.`;
       setError(errorMessage);
     } finally {
       setIsLoading(false);
