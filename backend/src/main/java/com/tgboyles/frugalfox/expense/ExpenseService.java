@@ -35,6 +35,8 @@ import jakarta.validation.Validator;
 @Transactional
 public class ExpenseService {
 
+private static final int MAX_IMPORT_ROWS = 1000;
+
 private final ExpenseRepository expenseRepository;
 private final Validator validator;
 
@@ -132,6 +134,8 @@ public Page<Expense> searchExpenses(
 * database save operation fails for any reason (e.g., database constraints, connection issues),
 * the entire transaction will be rolled back and <strong>none</strong> of the valid expenses will
 * be persisted. This ensures all-or-nothing atomicity for the database persistence phase.
+* <p>Note: Leading and trailing whitespace is automatically trimmed from all CSV fields during
+* parsing. Fields containing only whitespace are treated as blank and will fail validation.
 *
 * @param inputStream the CSV file input stream
 * @param user the user who owns the expenses
@@ -155,18 +159,18 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 					.setTrim(true)
 					.build())) {
 
-	List<CSVRecord> records = csvParser.getRecords();
+	int recordCount = 0;
 
-	// Check row limit
-	if (records.size() > 1000) {
-		throw new CsvImportException(
-			"File exceeds maximum row limit of 1000. Found " + records.size() + " rows.");
-	}
-
-	result.setTotalRows(records.size());
-
-	for (CSVRecord record : records) {
+	// Iterate through records, counting and validating row limit during parsing
+	for (CSVRecord record : csvParser) {
+		recordCount++;
 		rowNumber = (int) record.getRecordNumber();
+
+		// Check row limit during parsing to fail fast
+		if (recordCount > 1000) {
+		throw new CsvImportException(
+			"File exceeds maximum row limit of 1000. Found at least " + recordCount + " rows.");
+		}
 
 		try {
 		// Validate required fields are present
@@ -241,6 +245,9 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 		result.setFailedImports(result.getFailedImports() + 1);
 		}
 	}
+
+	// Set total rows after processing all records
+	result.setTotalRows(rowNumber);
 
 	// Save all valid expenses
 	if (!expensesToSave.isEmpty()) {

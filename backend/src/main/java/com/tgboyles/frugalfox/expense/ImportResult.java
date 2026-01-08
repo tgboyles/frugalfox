@@ -1,6 +1,7 @@
 package com.tgboyles.frugalfox.expense;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -23,7 +24,7 @@ public ImportResult(int totalRows, int successfulImports, int failedImports, Lis
 	this.totalRows = totalRows;
 	this.successfulImports = successfulImports;
 	this.failedImports = failedImports;
-	this.errors = errors != null ? errors : new ArrayList<>();
+	this.errors = errors != null ? new ArrayList<>(errors) : new ArrayList<>();
 }
 
 public int getTotalRows() {
@@ -51,11 +52,11 @@ public void setFailedImports(int failedImports) {
 }
 
 public List<String> getErrors() {
-	return errors;
+	return Collections.unmodifiableList(errors);
 }
 
 public void setErrors(List<String> errors) {
-	this.errors = errors;
+	this.errors = errors != null ? new ArrayList<>(errors) : new ArrayList<>();
 }
 
 public void addError(String error) {
