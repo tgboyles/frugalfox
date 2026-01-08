@@ -29,6 +29,9 @@ const QUOTES = [
   { text: "The quickest way to double your money is to fold it in half and put it in your back pocket.", author: "Will Rogers" },
 ];
 
+const TRANSITION_DURATION = 500; // milliseconds
+const QUOTE_ROTATION_INTERVAL = 8000; // milliseconds
+
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
@@ -38,7 +41,7 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const timeoutRef = useRef<number | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { login, register } = useAuth();
   const navigate = useNavigate();
@@ -49,16 +52,16 @@ export default function AuthPage() {
       setIsTransitioning(true);
       
       // Change quote after fade-out completes
-      timeoutRef.current = window.setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         setCurrentQuoteIndex((prevIndex) => (prevIndex + 1) % QUOTES.length);
         // Start fade-in
         setIsTransitioning(false);
-      }, 500); // Match the transition duration
-    }, 8000); // Change quote every 8 seconds
+      }, TRANSITION_DURATION);
+    }, QUOTE_ROTATION_INTERVAL);
 
     return () => {
       clearInterval(interval);
-      if (timeoutRef.current !== null) {
+      if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
     };
