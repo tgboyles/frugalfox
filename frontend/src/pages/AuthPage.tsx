@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,10 +58,11 @@ export default function AuthPage() {
         await register(username, password, email);
       }
       navigate('/dashboard');
-    } catch (err: unknown) {
-      const errorMessage =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-        `Failed to ${isLogin ? 'login' : 'register'}. Please try again.`;
+    } catch (err) {
+      let errorMessage = `Failed to ${isLogin ? 'login' : 'register'}. Please try again.`;
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
       setError(errorMessage);
     } finally {
       setIsLoading(false);
