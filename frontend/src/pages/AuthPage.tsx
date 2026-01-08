@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import { QUOTES } from '@/lib/quotes';
+
+const TRANSITION_DURATION = 500; // milliseconds
+const QUOTE_ROTATION_INTERVAL = 8000; // milliseconds
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -13,9 +17,33 @@ export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { login, register } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Start fade-out
+      setIsTransitioning(true);
+      
+      // Change quote after fade-out completes
+      timeoutRef.current = setTimeout(() => {
+        setCurrentQuoteIndex((prevIndex) => (prevIndex + 1) % QUOTES.length);
+        // Start fade-in
+        setIsTransitioning(false);
+      }, TRANSITION_DURATION);
+    }, QUOTE_ROTATION_INTERVAL);
+
+    return () => {
+      clearInterval(interval);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,10 +80,10 @@ export default function AuthPage() {
           <h1 className="text-3xl font-bold">Frugal Fox</h1>
         </div>
         <div className="space-y-4">
-          <blockquote className="text-lg">
-            "This expense tracker has saved me countless hours of work and helped me manage my finances better than ever before."
+          <blockquote className={`text-lg transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+            "{QUOTES[currentQuoteIndex].text}"
           </blockquote>
-          <div className="text-sm">— Happy User</div>
+          <div className={`text-sm transition-opacity duration-500 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>— {QUOTES[currentQuoteIndex].author}</div>
         </div>
       </div>
 
