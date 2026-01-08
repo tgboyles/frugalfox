@@ -106,7 +106,7 @@ export default function DashboardHome() {
                 <div>
                   <p className="font-medium">{expense.merchant}</p>
                   <p className="text-muted-foreground text-sm">
-                    {expense.category} • {expense.expenseDate}
+                    {expense.category} • {expense.date}
                   </p>
                 </div>
                 <p className="font-semibold">${expense.amount.toFixed(2)}</p>

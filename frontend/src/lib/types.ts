@@ -5,7 +5,7 @@ export type Expense = {
   amount: number;
   category: string;
   merchant: string;
-  expenseDate: string;
+  date: string;
   bank?: string;
   createdAt: string;
   updatedAt: string;
