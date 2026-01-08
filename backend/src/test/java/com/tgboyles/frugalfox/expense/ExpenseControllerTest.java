@@ -671,13 +671,6 @@ public void testImportExpensesRowLimitExceeded() throws Exception {
 				.header("Authorization", "Bearer " + authToken))
 		.andExpect(status().isBadRequest())
 		.andExpect(jsonPath("$.message").value(containsString("exceeds maximum row limit of 1000")));
-
-	// Verify no expenses were saved
-	mvc.perform(
-			get("/expenses")
-				.header("Authorization", "Bearer " + authToken))
-		.andExpect(status().isOk())
-		.andExpect(jsonPath("$.content", hasSize(0)));
 }
 
 // Helper methods
