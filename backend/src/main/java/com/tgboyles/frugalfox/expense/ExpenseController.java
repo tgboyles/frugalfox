@@ -34,6 +34,9 @@ import jakarta.validation.Valid;
 @RequestMapping("/expenses")
 public class ExpenseController {
 
+/** Maximum allowed CSV file size in bytes (1MB). Must match spring.servlet.multipart.max-file-size. */
+private static final long MAX_CSV_FILE_SIZE_BYTES = 1024 * 1024; // 1MB
+
 private final ExpenseService expenseService;
 
 public ExpenseController(ExpenseService expenseService) {
@@ -61,13 +64,14 @@ public ResponseEntity<Expense> createExpense(
 *
 * <p>Expected CSV format: date,merchant,amount,bank,category
 *
-* <p>The file must not exceed 1000 rows. Returns statistics about the import operation including
-* any validation errors encountered.
+* <p>The file must not exceed 1MB in size or 1000 rows. Returns statistics about the import
+* operation including any validation errors encountered.
 *
-* @param file the CSV file to import
+* @param file the CSV file to import (max 1MB)
 * @param user the authenticated user
 * @return import result with statistics and any errors (200 status)
-* @throws CsvImportException if the file is malformed or exceeds row limit (400 status)
+* @throws CsvImportException if the file is malformed, exceeds size limit, or exceeds row limit
+*     (400 status)
 */
 @PostMapping("/import")
 public ResponseEntity<ImportResult> importExpenses(
@@ -77,6 +81,14 @@ public ResponseEntity<ImportResult> importExpenses(
 	// Validate file is present
 	if (file.isEmpty()) {
 	throw new CsvImportException("File is required and cannot be empty");
+	}
+
+	// Validate file size to prevent memory exhaustion attacks
+	if (file.getSize() > MAX_CSV_FILE_SIZE_BYTES) {
+	throw new CsvImportException(
+		String.format(
+			"File size exceeds maximum limit of %d bytes. File size: %d bytes",
+			MAX_CSV_FILE_SIZE_BYTES, file.getSize()));
 	}
 
 	// Validate content type
