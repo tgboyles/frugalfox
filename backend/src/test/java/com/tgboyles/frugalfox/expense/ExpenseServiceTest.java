@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -351,5 +352,30 @@ public void testImportExpensesPartialSuccess() {
 	assertThat(result.getFailedImports()).isEqualTo(1);
 	assertThat(result.getErrors()).hasSize(1);
 	assertThat(result.getErrors().get(0)).contains("Invalid date format");
+}
+
+@Test
+public void testImportExpensesBatchProcessing() {
+	// Create CSV with 250 rows to trigger multiple batches (batch size is 100)
+	StringBuilder csvContent = new StringBuilder("date,merchant,amount,bank,category\n");
+	for (int i = 0; i < 250; i++) {
+		csvContent.append("2025-01-01,Merchant").append(i).append(",10.00,Chase,Category\n");
+	}
+
+	InputStream inputStream =
+		new ByteArrayInputStream(csvContent.toString().getBytes(StandardCharsets.UTF_8));
+
+	when(validator.validate(any(Expense.class))).thenReturn(Collections.emptySet());
+	when(expenseRepository.saveAll(any())).thenReturn(Collections.emptyList());
+
+	ImportResult result = expenseService.importExpenses(inputStream, testUser);
+
+	assertThat(result.getTotalRows()).isEqualTo(250);
+	assertThat(result.getSuccessfulImports()).isEqualTo(250);
+	assertThat(result.getFailedImports()).isEqualTo(0);
+	assertThat(result.getErrors()).isEmpty();
+
+	// Verify saveAll was called 3 times (100 + 100 + 50)
+	verify(expenseRepository, times(3)).saveAll(any());
 }
 }
