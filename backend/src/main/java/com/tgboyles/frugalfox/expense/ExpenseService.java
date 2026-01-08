@@ -14,10 +14,12 @@ import java.util.Set;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tgboyles.frugalfox.user.User;
@@ -147,6 +149,7 @@ public Page<Expense> searchExpenses(
 public ImportResult importExpenses(InputStream inputStream, User user) {
 	ImportResult result = new ImportResult();
 	List<Expense> currentBatch = new ArrayList<>();
+	List<Integer> currentBatchRowNumbers = new ArrayList<>();
 	int rowNumber = 0;
 
 	try (Reader reader = new InputStreamReader(inputStream);
@@ -238,11 +241,13 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 		}
 
 		currentBatch.add(expense);
+		currentBatchRowNumbers.add(rowNumber);
 
 		// Save batch when it reaches the batch size
 		if (currentBatch.size() >= BATCH_SIZE) {
-			saveBatch(currentBatch, result);
+			saveBatch(currentBatch, currentBatchRowNumbers, result);
 			currentBatch.clear();
+			currentBatchRowNumbers.clear();
 		}
 
 		} catch (CsvImportException e) {
@@ -259,7 +264,7 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 
 	// Save any remaining expenses in the last batch
 	if (!currentBatch.isEmpty()) {
-		saveBatch(currentBatch, result);
+		saveBatch(currentBatch, currentBatchRowNumbers, result);
 	}
 
 	} catch (CsvImportException e) {
@@ -284,21 +289,23 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 * the error is caught and logged, but does not affect other batches.
 *
 * @param batch the list of expenses to save
+* @param rowNumbers the row numbers corresponding to each expense in the batch
 * @param result the import result to update with success/failure statistics
 */
-@Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
-protected void saveBatch(List<Expense> batch, ImportResult result) {
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+protected void saveBatch(List<Expense> batch, List<Integer> rowNumbers, ImportResult result) {
 	try {
 		expenseRepository.saveAll(batch);
 		result.setSuccessfulImports(result.getSuccessfulImports() + batch.size());
-	} catch (Exception e) {
-		// Log batch save failure and update result
-		int batchStartRow = result.getSuccessfulImports() + result.getFailedImports() + 1;
+	} catch (DataAccessException e) {
+		// Database error occurred during batch save
+		int firstRow = rowNumbers.isEmpty() ? 0 : rowNumbers.get(0);
+		int lastRow = rowNumbers.isEmpty() ? 0 : rowNumbers.get(rowNumbers.size() - 1);
 		String errorMsg = String.format(
-			"Batch save failed for rows around %d-%d: %s. These rows were not imported.",
-			batchStartRow,
-			batchStartRow + batch.size() - 1,
-			e.getMessage());
+			"Batch save failed for rows %d-%d: %s. These rows were not imported.",
+			firstRow,
+			lastRow,
+			e.getMostSpecificCause().getMessage());
 		result.addError(errorMsg);
 		result.setFailedImports(result.getFailedImports() + batch.size());
 	}
