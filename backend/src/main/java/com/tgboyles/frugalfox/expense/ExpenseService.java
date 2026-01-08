@@ -127,6 +127,9 @@ public Page<Expense> searchExpenses(
 *
 * <p>Validates the file has no more than 1000 rows and that all rows are well-formed.
 *
+* <p>Note: Leading and trailing whitespace is automatically trimmed from all CSV fields during
+* parsing. Fields containing only whitespace are treated as blank and will fail validation.
+*
 * @param inputStream the CSV file input stream
 * @param user the user who owns the expenses
 * @return import result with statistics and any errors
@@ -149,14 +152,17 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 					.setTrim(true)
 					.build())) {
 
-	// Stream records one at a time instead of loading all into memory
+	int recordCount = 0;
+
+	// Iterate through records, counting and validating row limit during parsing
 	for (CSVRecord record : csvParser) {
+		recordCount++;
 		rowNumber = (int) record.getRecordNumber();
 
-		// Check row limit during streaming
-		if (rowNumber > MAX_IMPORT_ROWS) {
-			throw new CsvImportException(
-				"File exceeds maximum row limit of " + MAX_IMPORT_ROWS + ". Found at least " + rowNumber + " rows.");
+		// Check row limit during parsing to fail fast
+		if (recordCount > 1000) {
+		throw new CsvImportException(
+			"File exceeds maximum row limit of 1000. Found at least " + recordCount + " rows.");
 		}
 
 		try {
