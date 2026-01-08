@@ -98,7 +98,6 @@ public ResponseEntity<ImportResult> importExpenses(
 	}
 	if (!(contentType.equals("text/csv")
 		|| contentType.equals("application/csv")
-		|| contentType.equals("text/plain")
 		|| contentType.equals("application/vnd.ms-excel"))) {
 	throw new CsvImportException(
 		"Invalid file type. Expected a CSV file, but got: " + contentType);
