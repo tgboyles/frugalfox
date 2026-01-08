@@ -37,8 +37,7 @@ api.interceptors.response.use(
 
 // API methods
 export const authApi = {
-  login: (username: string, password: string) =>
-    api.post('/auth/login', { username, password }),
+  login: (username: string, password: string) => api.post('/auth/login', { username, password }),
 
   register: (username: string, password: string, email: string) =>
     api.post('/auth/register', { username, password, email }),
@@ -68,13 +67,16 @@ export const expenseApi = {
     bank?: string;
   }) => api.post('/expenses', expense),
 
-  updateExpense: (id: number, expense: {
-    amount: number;
-    category: string;
-    merchant: string;
-    expenseDate: string;
-    bank?: string;
-  }) => api.put(`/expenses/${id}`, expense),
+  updateExpense: (
+    id: number,
+    expense: {
+      amount: number;
+      category: string;
+      merchant: string;
+      expenseDate: string;
+      bank?: string;
+    }
+  ) => api.put(`/expenses/${id}`, expense),
 
   deleteExpense: (id: number) => api.delete(`/expenses/${id}`),
 };
