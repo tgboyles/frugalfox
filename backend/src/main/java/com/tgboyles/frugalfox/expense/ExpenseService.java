@@ -35,6 +35,8 @@ import jakarta.validation.Validator;
 @Transactional
 public class ExpenseService {
 
+private static final int MAX_IMPORT_ROWS = 1000;
+
 private final ExpenseRepository expenseRepository;
 private final Validator validator;
 
@@ -237,8 +239,8 @@ public ImportResult importExpenses(InputStream inputStream, User user) {
 		}
 	}
 
-	// Set total rows counted during parsing
-	result.setTotalRows(recordCount);
+	// Set total rows after processing all records
+	result.setTotalRows(rowNumber);
 
 	// Save all valid expenses
 	if (!expensesToSave.isEmpty()) {
