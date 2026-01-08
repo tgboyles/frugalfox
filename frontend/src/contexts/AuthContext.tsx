@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useState, type ReactNode } from 'react';
 import { authApi } from '@/lib/api';
 
 interface AuthContextType {
@@ -21,21 +22,16 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [username, setUsername] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    // Check if user is already authenticated on mount
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
     const token = localStorage.getItem('token');
-    const storedUsername = localStorage.getItem('username');
+    return !!token;
+  });
+  const [username, setUsername] = useState<string | null>(() => {
+    return localStorage.getItem('username');
+  });
 
-    if (token && storedUsername) {
-      setIsAuthenticated(true);
-      setUsername(storedUsername);
-    }
-    setIsLoading(false);
-  }, []);
+  // Auth check is synchronous (from localStorage), so no loading state needed
+  const isLoading = false;
 
   const login = async (username: string, password: string) => {
     try {
