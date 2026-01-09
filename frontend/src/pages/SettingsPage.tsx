@@ -29,7 +29,7 @@ export default function SettingsPage() {
   });
 
   // Fetch current user information
-  const { data: currentUser } = useQuery({
+  const { data: currentUser, error: currentUserError } = useQuery({
     queryKey: ['currentUser'],
     queryFn: async () => {
       const response = await settingsApi.getCurrentUser();
@@ -150,7 +150,11 @@ export default function SettingsPage() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">Email:</span>
-            <span className="font-medium">{currentUser?.email || 'Loading...'}</span>
+            <span className="font-medium">
+              {currentUserError
+                ? 'Error loading email'
+                : currentUser?.email || 'Loading...'}
+            </span>
           </div>
         </div>
       </Card>
