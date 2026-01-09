@@ -88,6 +88,8 @@ frugal_fox/
    - **ALWAYS use Tailwind CSS v4** for styling (NOT CSS modules, styled-components, or other CSS solutions)
    - **ALWAYS use Lucide React** for icons (NOT FontAwesome, Material Icons, or other icon libraries)
    - **ALWAYS use pnpm** for package management (NOT npm or yarn)
+   - **ALWAYS use pnpm format / prettier** to ensure correct formatting
+   - **Always use pnpm lint / ESLint** to prevent dumb bugs
 
 2. **Component Patterns**
 
