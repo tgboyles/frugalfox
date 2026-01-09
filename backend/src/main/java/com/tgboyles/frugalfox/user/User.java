@@ -45,7 +45,7 @@ private String password;
 
 @NotBlank(message = "Email is required")
 @Email(message = "Email must be valid")
-@Column(nullable = false)
+@Column(nullable = false, unique = true)
 private String email;
 
 @Column(nullable = false)
