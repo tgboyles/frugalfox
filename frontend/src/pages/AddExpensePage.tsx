@@ -264,13 +264,13 @@ export default function AddExpensePage() {
                   <div className="space-y-2">
                     <p className="font-semibold">CSV Format Requirements:</p>
                     <p className="text-xs">Your CSV file must have these columns in order:</p>
-                    <code className="bg-muted block rounded p-2 text-xs">
+                    <code className="bg-background/20 block rounded p-2 text-xs">
                       date,merchant,amount,bank,category
                     </code>
                     <p className="text-xs">
                       <strong>Example:</strong>
                     </p>
-                    <code className="bg-muted block rounded p-2 font-mono text-xs whitespace-pre">
+                    <code className="bg-background/20 block rounded p-2 font-mono text-xs whitespace-pre">
                       {`2024-01-15,Starbucks,5.50,Chase,Food
 2024-01-16,Amazon,29.99,Chase,Shopping`}
                     </code>
