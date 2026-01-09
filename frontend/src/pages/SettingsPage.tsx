@@ -29,11 +29,11 @@ export default function SettingsPage() {
   });
 
   // Fetch current user information
-  const { data: currentUser, error: currentUserError } = useQuery({
+  const { data: currentUser, error: currentUserError, isLoading: isLoadingUser } = useQuery({
     queryKey: ['currentUser'],
     queryFn: async () => {
       const response = await settingsApi.getCurrentUser();
-      return response.data as UserResponse;
+      return response.data;
     },
   });
 
@@ -153,7 +153,9 @@ export default function SettingsPage() {
             <span className="font-medium">
               {currentUserError
                 ? 'Error loading email'
-                : currentUser?.email || 'Loading...'}
+                : isLoadingUser
+                  ? 'Loading...'
+                  : currentUser?.email || 'Not available'}
             </span>
           </div>
         </div>
