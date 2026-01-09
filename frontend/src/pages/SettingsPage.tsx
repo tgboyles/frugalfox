@@ -2,16 +2,18 @@ import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { settingsApi, expenseApi } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { type MessageResponse, type UserResponse } from '@/lib/types';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Download, Lock, Mail, FileDown } from 'lucide-react';
+import { Download, Lock, Mail, FileDown, Sun, Moon } from 'lucide-react';
 
 export default function SettingsPage() {
   const { username } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [emailForm, setEmailForm] = useState({ email: '' });
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -162,6 +164,42 @@ export default function SettingsPage() {
                   : currentUser?.email || 'Not available'}
             </span>
           </div>
+        </div>
+      </Card>
+
+      <Separator />
+
+      {/* Theme Settings */}
+      <Card className="p-6">
+        <div className="mb-4 flex items-center gap-2">
+          {theme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+          <h3 className="text-xl font-semibold">Appearance</h3>
+        </div>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Theme</p>
+              <p className="text-muted-foreground text-sm">
+                Switch between light and dark mode to protect your vision
+              </p>
+            </div>
+            <Button onClick={toggleTheme} variant="outline" size="sm">
+              {theme === 'dark' ? (
+                <>
+                  <Sun className="mr-2 h-4 w-4" />
+                  Light Mode
+                </>
+              ) : (
+                <>
+                  <Moon className="mr-2 h-4 w-4" />
+                  Dark Mode
+                </>
+              )}
+            </Button>
+          </div>
+          <p className="text-muted-foreground text-xs">
+            Current theme: <span className="font-medium capitalize">{theme}</span>
+          </p>
         </div>
       </Card>
 
