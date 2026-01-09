@@ -100,8 +100,9 @@ export default function AddExpensePage() {
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      errors.amount = 'Amount must be greater than 0';
+    const amount = parseFloat(formData.amount);
+    if (!formData.amount || isNaN(amount) || amount <= 0) {
+      errors.amount = 'Amount must be a valid number greater than 0';
     }
     if (!formData.category.trim()) {
       errors.category = 'Category is required';
