@@ -263,15 +263,15 @@ export default function AddExpensePage() {
                 <TooltipContent className="max-w-sm">
                   <div className="space-y-2">
                     <p className="font-semibold">CSV Format Requirements:</p>
-                    <p className="text-xs">Your CSV file must have these columns in order:</p>
-                    <code className="bg-muted block rounded p-2 text-xs">
-                      date,merchant,amount,bank,category
-                    </code>
                     <p className="text-xs">
-                      <strong>Example:</strong>
+                      Your CSV file must include a header row with these columns:
+                    </p>
+                    <p className="text-xs">
+                      <strong>Example CSV file content:</strong>
                     </p>
                     <code className="bg-muted block rounded p-2 font-mono text-xs whitespace-pre">
-                      {`2024-01-15,Starbucks,5.50,Chase,Food
+                      {`date,merchant,amount,bank,category
+2024-01-15,Starbucks,5.50,Chase,Food
 2024-01-16,Amazon,29.99,Chase,Shopping`}
                     </code>
                     <ul className="list-inside list-disc space-y-1 text-xs">
