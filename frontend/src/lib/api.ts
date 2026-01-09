@@ -100,11 +100,7 @@ export const expenseApi = {
   importExpenses: (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    return api.post('/expenses/import', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    return api.post('/expenses/import', formData);
   },
 };
 
