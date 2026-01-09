@@ -36,13 +36,10 @@ export default function DashboardHome() {
   const categoryCount = new Set(expenses.map((e: Expense) => e.category)).size;
 
   // Aggregate data by category
-  const categoryData = expenses.reduce(
-    (acc: Record<string, number>, expense: Expense) => {
-      acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
-      return acc;
-    },
-    {}
-  );
+  const categoryData = expenses.reduce((acc: Record<string, number>, expense: Expense) => {
+    acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
+    return acc;
+  }, {});
 
   const categoryChartData = Object.entries(categoryData).map(([name, value]) => ({
     name,
@@ -172,9 +169,7 @@ export default function DashboardHome() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) =>
-                    `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
-                  }
+                  label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                   outerRadius={80}
                   dataKey="value"
                 >
@@ -207,9 +202,7 @@ export default function DashboardHome() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) =>
-                    `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
-                  }
+                  label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
@@ -243,9 +236,7 @@ export default function DashboardHome() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) =>
-                    `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
-                  }
+                  label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="value"
