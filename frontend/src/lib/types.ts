@@ -71,3 +71,10 @@ export type UserResponse = {
 export type MessageResponse = {
   message: string;
 };
+
+export type ImportResult = {
+  totalRows: number;
+  successfulImports: number;
+  failedImports: number;
+  errors: string[];
+};
