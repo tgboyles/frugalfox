@@ -70,25 +70,25 @@ export default function DashboardHome() {
     }));
   }, [expenses]);
 
-  // Separate refunds and expenses - memoized to avoid recalculation on every render
-  // Business logic: Negative amounts represent refunds (e.g., returns, reimbursements)
+  // Separate income and expenses - memoized to avoid recalculation on every render
+  // Business logic: Negative amounts represent income (e.g., returns, reimbursements)
   // Positive amounts represent regular expenses
-  const refundsExpenseChartData = useMemo(() => {
-    const refundsExpenseData = expenses.reduce(
-      (acc: { refunds: number; expenses: number }, expense: Expense) => {
+  const incomeExpenseChartData = useMemo(() => {
+    const incomeExpenseData = expenses.reduce(
+      (acc: { income: number; expenses: number }, expense: Expense) => {
         if (expense.amount < 0) {
-          acc.refunds += Math.abs(expense.amount);
+          acc.income += Math.abs(expense.amount);
         } else {
           acc.expenses += expense.amount;
         }
         return acc;
       },
-      { refunds: 0, expenses: 0 }
+      { income: 0, expenses: 0 }
     );
 
     return [
-      { name: 'Refunds', value: Number(refundsExpenseData.refunds.toFixed(2)) },
-      { name: 'Expenses', value: Number(refundsExpenseData.expenses.toFixed(2)) },
+      { name: 'Income', value: Number(incomeExpenseData.income.toFixed(2)), color: '#10b981' },
+      { name: 'Expenses', value: Number(incomeExpenseData.expenses.toFixed(2)), color: '#f97316' },
     ].filter((item) => item.value > 0); // Only show non-zero values
   }, [expenses]);
 
@@ -242,14 +242,14 @@ export default function DashboardHome() {
           )}
         </Card>
 
-        {/* Refunds vs Expenses */}
+        {/* Income vs Expenses */}
         <Card className="p-6">
-          <h3 className="mb-4 text-lg font-semibold">Refunds vs Expenses</h3>
+          <h3 className="mb-4 text-lg font-semibold">Income vs Expenses</h3>
           {isLoading ? (
             <div className="text-muted-foreground flex h-[300px] items-center justify-center">
               Loading...
             </div>
-          ) : refundsExpenseChartData.length === 0 ? (
+          ) : incomeExpenseChartData.length === 0 ? (
             <div className="text-muted-foreground flex h-[300px] items-center justify-center text-center">
               No data available
             </div>
@@ -258,11 +258,11 @@ export default function DashboardHome() {
               width="100%"
               height={300}
               role="img"
-              aria-label="Pie chart showing refunds versus expenses"
+              aria-label="Pie chart showing income versus expenses"
             >
               <PieChart>
                 <Pie
-                  data={refundsExpenseChartData}
+                  data={incomeExpenseChartData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
@@ -270,8 +270,8 @@ export default function DashboardHome() {
                   outerRadius={80}
                   dataKey="value"
                 >
-                  {refundsExpenseChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  {incomeExpenseChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} />
