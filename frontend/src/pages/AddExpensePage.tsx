@@ -263,7 +263,9 @@ export default function AddExpensePage() {
                 <TooltipContent className="max-w-sm">
                   <div className="space-y-2">
                     <p className="font-semibold">CSV Format Requirements:</p>
-                    <p className="text-xs">Your CSV file must include a header row with these columns:</p>
+                    <p className="text-xs">
+                      Your CSV file must include a header row with these columns:
+                    </p>
                     <p className="text-xs">
                       <strong>Example CSV file content:</strong>
                     </p>
