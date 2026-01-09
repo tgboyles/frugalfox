@@ -192,6 +192,67 @@
 					"response": []
 				},
 				{
+					"name": "Export Expenses to CSV",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/expenses/export?category=&bank=&merchant=&startDate=&endDate=&minAmount=&maxAmount=&sort=date,desc",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"expenses",
+								"export"
+							],
+							"query": [
+								{
+									"key": "category",
+									"value": "",
+									"description": "Exact match category filter (e.g., Groceries, Shopping)"
+								},
+								{
+									"key": "bank",
+									"value": "",
+									"description": "Exact match bank filter (e.g., Chase, BofA)"
+								},
+								{
+									"key": "merchant",
+									"value": "",
+									"description": "Partial, case-insensitive merchant search"
+								},
+								{
+									"key": "startDate",
+									"value": "",
+									"description": "Start date filter (ISO 8601: YYYY-MM-DD)"
+								},
+								{
+									"key": "endDate",
+									"value": "",
+									"description": "End date filter (ISO 8601: YYYY-MM-DD)"
+								},
+								{
+									"key": "minAmount",
+									"value": "",
+									"description": "Minimum amount filter"
+								},
+								{
+									"key": "maxAmount",
+									"value": "",
+									"description": "Maximum amount filter"
+								},
+								{
+									"key": "sort",
+									"value": "date,desc",
+									"description": "Sort order (e.g., date,desc or amount,asc)"
+								}
+							]
+						},
+						"description": "Export expenses to CSV format for backup, analysis, or migration.\n\n**CSV Format** (same as import):\n```csv\ndate,merchant,amount,bank,category\n2025-01-01,Whole Foods,125.50,Chase,Groceries\n2025-01-02,Shell Gas Station,45.00,Chase,Transportation\n2025-01-03,Target,75.00,BofA,Shopping\n```\n\n**Features**:\n- Supports all search filters from GET /expenses\n- Returns downloadable CSV file\n- User isolation (only exports your expenses)\n- Compatible with CSV import format\n- Can be sorted by any field\n\n**Response Headers**:\n```\nContent-Type: text/csv\nContent-Disposition: attachment; filename=\"expenses.csv\"\n```\n\n**Examples**:\n- Export all: `/expenses/export`\n- Export groceries: `/expenses/export?category=Groceries`\n- Export January 2025: `/expenses/export?startDate=2025-01-01&endDate=2025-01-31`\n- Export sorted by amount: `/expenses/export?sort=amount,desc`\n\n**Use Cases**:\n- Backup your expense data\n- Analyze expenses in Excel/Google Sheets\n- Migrate data to another system\n- Create periodic reports\n- Share filtered expense data"
+					},
+					"response": []
+				},
+				{
 					"name": "Get Expense by ID",
 					"request": {
 						"method": "GET",

@@ -1,5 +1,6 @@
 package com.tgboyles.frugalfox.expense;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -640,6 +641,101 @@ public void testImportExpensesUserIsolation() throws Exception {
 		.andExpect(status().isOk())
 		.andExpect(jsonPath("$.content", hasSize(1)))
 		.andExpect(jsonPath("$.content[0].merchant").value("User2 Store"));
+}
+
+@Test
+public void testExportExpensesSuccess() throws Exception {
+	// Create test expenses
+	createTestExpense("Whole Foods", new BigDecimal("125.50"), "Groceries");
+	createTestExpense("Target", new BigDecimal("75.00"), "Shopping");
+
+	MvcResult result = mvc.perform(
+			get("/expenses/export")
+				.header("Authorization", "Bearer " + authToken))
+		.andExpect(status().isOk())
+		.andExpect(jsonPath("$").isString())
+		.andReturn();
+
+	String csvContent = result.getResponse().getContentAsString();
+	assertThat(csvContent).contains("date,merchant,amount,bank,category");
+	assertThat(csvContent).contains("Whole Foods");
+	assertThat(csvContent).contains("Target");
+	assertThat(csvContent).contains("125.50");
+	assertThat(csvContent).contains("75.00");
+}
+
+@Test
+public void testExportExpensesWithFilters() throws Exception {
+	createTestExpense("Whole Foods", new BigDecimal("125.50"), "Groceries");
+	createTestExpense("Target", new BigDecimal("75.00"), "Shopping");
+	createTestExpense("Trader Joes", new BigDecimal("85.00"), "Groceries");
+
+	MvcResult result = mvc.perform(
+			get("/expenses/export")
+				.param("category", "Groceries")
+				.header("Authorization", "Bearer " + authToken))
+		.andExpect(status().isOk())
+		.andReturn();
+
+	String csvContent = result.getResponse().getContentAsString();
+	assertThat(csvContent).contains("Whole Foods");
+	assertThat(csvContent).contains("Trader Joes");
+	assertThat(csvContent).doesNotContain("Target");
+}
+
+@Test
+public void testExportExpensesEmpty() throws Exception {
+	MvcResult result = mvc.perform(
+			get("/expenses/export")
+				.header("Authorization", "Bearer " + authToken))
+		.andExpect(status().isOk())
+		.andReturn();
+
+	String csvContent = result.getResponse().getContentAsString();
+	assertThat(csvContent).contains("date,merchant,amount,bank,category");
+	assertThat(csvContent.split("\n")).hasSize(1); // Only header
+}
+
+@Test
+public void testExportExpensesUnauthorized() throws Exception {
+	mvc.perform(
+			get("/expenses/export"))
+		.andExpect(status().isForbidden());
+}
+
+@Test
+public void testExportExpensesUserIsolation() throws Exception {
+	// Create expense for testUser
+	createTestExpense("User1 Store", new BigDecimal("100.00"), "Shopping");
+
+	// Create second user
+	User user2 = new User();
+	user2.setUsername("testuser2");
+	user2.setPassword(passwordEncoder.encode("password123"));
+	user2.setEmail("test2@example.com");
+	user2.setEnabled(true);
+	user2 = userRepository.save(user2);
+
+	// Create expense for user2
+	Expense expense2 = new Expense();
+	expense2.setDate(LocalDate.of(2025, 12, 26));
+	expense2.setMerchant("User2 Store");
+	expense2.setAmount(new BigDecimal("200.00"));
+	expense2.setBank("Chase");
+	expense2.setCategory("Shopping");
+	expense2.setUser(user2);
+	expenseRepository.save(expense2);
+
+	// testUser should only export their own expenses
+	MvcResult result = mvc.perform(
+			get("/expenses/export")
+				.header("Authorization", "Bearer " + authToken))
+		.andExpect(status().isOk())
+		.andReturn();
+
+	String csvContent = result.getResponse().getContentAsString();
+	assertThat(csvContent).contains("User1 Store");
+	assertThat(csvContent).doesNotContain("User2 Store");
 }
 
 @Test

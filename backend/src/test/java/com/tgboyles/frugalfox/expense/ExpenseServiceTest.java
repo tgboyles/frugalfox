@@ -404,4 +404,78 @@ public void testImportExpensesBatchProcessing() {
 	// Verify saveAll was called 3 times (100 + 100 + 50)
 	verify(expenseRepository, times(3)).saveAll(any());
 }
+
+@Test
+public void testExportExpensesToCsv() throws Exception {
+	User testUser = new User();
+	testUser.setId(1L);
+	testUser.setUsername("testuser");
+
+	List<Expense> expenses = Arrays.asList(
+		createExpense(1L, testUser, LocalDate.of(2025, 1, 1), "Whole Foods", new BigDecimal("50.00"), "Chase", "Groceries"),
+		createExpense(2L, testUser, LocalDate.of(2025, 1, 2), "Target", new BigDecimal("75.50"), "BofA", "Shopping")
+	);
+
+	when(expenseRepository.findAll(any(Specification.class), any(org.springframework.data.domain.Sort.class)))
+		.thenReturn(expenses);
+
+	ExpenseSearchCriteria criteria = new ExpenseSearchCriteria();
+	Pageable pageable = PageRequest.of(0, 20);
+
+	String csv = expenseService.exportExpensesToCsv(criteria, testUser, pageable);
+
+	assertThat(csv).isNotNull();
+	assertThat(csv).contains("date,merchant,amount,bank,category");
+	assertThat(csv).contains("2025-01-01,Whole Foods,50.00,Chase,Groceries");
+	assertThat(csv).contains("2025-01-02,Target,75.50,BofA,Shopping");
+}
+
+@Test
+public void testExportExpensesToCsvWithFilters() throws Exception {
+	User testUser = new User();
+	testUser.setId(1L);
+	testUser.setUsername("testuser");
+
+	List<Expense> expenses = Arrays.asList(
+		createExpense(1L, testUser, LocalDate.of(2025, 1, 1), "Whole Foods", new BigDecimal("50.00"), "Chase", "Groceries")
+	);
+
+	when(expenseRepository.findAll(any(Specification.class), any(org.springframework.data.domain.Sort.class)))
+		.thenReturn(expenses);
+
+	ExpenseSearchCriteria criteria = new ExpenseSearchCriteria();
+	criteria.setCategory("Groceries");
+	Pageable pageable = PageRequest.of(0, 20);
+
+	String csv = expenseService.exportExpensesToCsv(criteria, testUser, pageable);
+
+	assertThat(csv).isNotNull();
+	assertThat(csv).contains("date,merchant,amount,bank,category");
+	assertThat(csv).contains("2025-01-01,Whole Foods,50.00,Chase,Groceries");
+}
+
+@Test
+public void testExportExpensesToCsvEmpty() throws Exception {
+	User testUser = new User();
+	testUser.setId(1L);
+	testUser.setUsername("testuser");
+
+	when(expenseRepository.findAll(any(Specification.class), any(org.springframework.data.domain.Sort.class)))
+		.thenReturn(Collections.emptyList());
+
+	ExpenseSearchCriteria criteria = new ExpenseSearchCriteria();
+	Pageable pageable = PageRequest.of(0, 20);
+
+	String csv = expenseService.exportExpensesToCsv(criteria, testUser, pageable);
+
+	assertThat(csv).isNotNull();
+	assertThat(csv).contains("date,merchant,amount,bank,category");
+	assertThat(csv.split("\n")).hasSize(1); // Only header row
+}
+
+private Expense createExpense(Long id, User user, LocalDate date, String merchant, BigDecimal amount, String bank, String category) {
+	Expense expense = new Expense(user, date, merchant, amount, bank, category);
+	expense.setId(id);
+	return expense;
+}
 }

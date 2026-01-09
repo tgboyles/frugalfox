@@ -194,4 +194,50 @@ public ResponseEntity<Page<Expense>> searchExpenses(
 	Page<Expense> expenses = expenseService.searchExpenses(criteria, user, pageable);
 	return ResponseEntity.ok(expenses);
 }
+
+/**
+ * Exports expenses to CSV format with optional filters, scoped to the authenticated user.
+ *
+ * <p>The CSV format is: date,merchant,amount,bank,category
+ *
+ * @param category optional category filter (exact match)
+ * @param bank optional bank filter (exact match)
+ * @param merchant optional merchant filter (partial match, case-insensitive)
+ * @param startDate optional start date filter (inclusive)
+ * @param endDate optional end date filter (inclusive)
+ * @param minAmount optional minimum amount filter (inclusive)
+ * @param maxAmount optional maximum amount filter (inclusive)
+ * @param pageable pagination and sorting parameters (pagination ignored for export, only sorting used)
+ * @param user the authenticated user
+ * @return CSV file download with 200 status
+ * @throws IOException if there is an error generating the CSV
+ */
+@GetMapping("/export")
+public ResponseEntity<String> exportExpenses(
+	@RequestParam(required = false) String category,
+	@RequestParam(required = false) String bank,
+	@RequestParam(required = false) String merchant,
+	@RequestParam(required = false) LocalDate startDate,
+	@RequestParam(required = false) LocalDate endDate,
+	@RequestParam(required = false) BigDecimal minAmount,
+	@RequestParam(required = false) BigDecimal maxAmount,
+	@PageableDefault(size = 20, sort = "date") Pageable pageable,
+	@AuthenticationPrincipal User user) throws IOException {
+
+	ExpenseSearchCriteria criteria = new ExpenseSearchCriteria();
+	criteria.setCategory(category);
+	criteria.setBank(bank);
+	criteria.setMerchant(merchant);
+	criteria.setStartDate(startDate);
+	criteria.setEndDate(endDate);
+	criteria.setMinAmount(minAmount);
+	criteria.setMaxAmount(maxAmount);
+
+	String csvContent = expenseService.exportExpensesToCsv(criteria, user, pageable);
+
+	return ResponseEntity.ok()
+		.header("Content-Type", "text/csv")
+		.header("Content-Disposition", "attachment; filename=\"expenses.csv\"")
+		.body(csvContent);
+}
 }

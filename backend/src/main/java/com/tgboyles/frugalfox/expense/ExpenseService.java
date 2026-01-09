@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -14,6 +15,7 @@ import java.util.Set;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
@@ -379,5 +381,45 @@ private Specification<Expense> buildSpecification(ExpenseSearchCriteria criteria
 
 	return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
 	};
+}
+
+/**
+ * Exports expenses to CSV format based on search criteria.
+ *
+ * <p>The CSV format matches the import format: date,merchant,amount,bank,category
+ *
+ * @param criteria the search criteria to filter expenses
+ * @param user the user to scope results to
+ * @param pageable the pagination information (note: export will fetch ALL matching results)
+ * @return CSV content as a string
+ * @throws IOException if there is an error generating the CSV
+ */
+@Transactional(readOnly = true)
+public String exportExpensesToCsv(ExpenseSearchCriteria criteria, User user, Pageable pageable) throws IOException {
+	Specification<Expense> spec = buildSpecification(criteria, user);
+
+	// Fetch all matching expenses (ignoring pagination for export)
+	List<Expense> expenses = expenseRepository.findAll(spec, pageable.getSort());
+
+	StringWriter writer = new StringWriter();
+	try (CSVPrinter csvPrinter = new CSVPrinter(writer,
+			CSVFormat.DEFAULT.builder()
+				.setHeader("date", "merchant", "amount", "bank", "category")
+				.build())) {
+
+		for (Expense expense : expenses) {
+			csvPrinter.printRecord(
+				expense.getDate(),
+				expense.getMerchant(),
+				expense.getAmount(),
+				expense.getBank(),
+				expense.getCategory()
+			);
+		}
+
+		csvPrinter.flush();
+	}
+
+	return writer.toString();
 }
 }
