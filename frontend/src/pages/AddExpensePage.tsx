@@ -18,6 +18,10 @@ type ExpenseFormData = {
   bank: string;
 };
 
+// Constants
+const REDIRECT_DELAY_MS = 1000;
+const BYTES_PER_KB = 1024;
+
 export default function AddExpensePage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -59,7 +63,7 @@ export default function AddExpensePage() {
       });
       setFormErrors({});
       // Navigate to expenses page after a brief delay
-      setTimeout(() => navigate('/dashboard/expenses'), 1000);
+      setTimeout(() => navigate('/dashboard/expenses'), REDIRECT_DELAY_MS);
     },
     onError: (error: unknown) => {
       // Handle validation errors from backend
@@ -291,14 +295,14 @@ export default function AddExpensePage() {
                 <Input
                   id="csv-file"
                   type="file"
-                  accept=".csv,text/csv,application/csv,application/vnd.ms-excel"
+                  accept=".csv,text/csv,application/csv"
                   onChange={handleFileChange}
                   className="flex-1"
                 />
               </div>
               {selectedFile && (
                 <p className="text-muted-foreground text-sm">
-                  Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)
+                  Selected: {selectedFile.name} ({(selectedFile.size / BYTES_PER_KB).toFixed(2)} KB)
                 </p>
               )}
             </div>
