@@ -72,4 +72,37 @@ public User findByUsername(String username) {
 		.findByUsername(username)
 		.orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 }
+
+/**
+* Updates a user's email address.
+*
+* @param user the user to update
+* @param newEmail the new email address
+* @return the updated user
+* @throws IllegalArgumentException if email is already in use by another user
+*/
+public User updateEmail(User user, String newEmail) {
+	if (userRepository.existsByEmailAndIdNot(newEmail, user.getId())) {
+		throw new IllegalArgumentException("Email already in use: " + newEmail);
+	}
+	user.setEmail(newEmail);
+	return userRepository.save(user);
+}
+
+/**
+* Updates a user's password.
+*
+* @param user the user to update
+* @param currentPassword the current password (for verification)
+* @param newPassword the new password (will be hashed)
+* @return the updated user
+* @throws IllegalArgumentException if current password is incorrect
+*/
+public User updatePassword(User user, String currentPassword, String newPassword) {
+	if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+		throw new IllegalArgumentException("Current password is incorrect");
+	}
+	user.setPassword(passwordEncoder.encode(newPassword));
+	return userRepository.save(user);
+}
 }
