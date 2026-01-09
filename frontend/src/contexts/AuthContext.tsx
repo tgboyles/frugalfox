@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { authApi } from '@/lib/api';
+import { isValidToken, getUsernameFromToken } from '@/lib/jwt';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -22,15 +23,33 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+  // Compute initial authentication state
+  const getInitialAuthState = () => {
     const token = localStorage.getItem('token');
-    return !!token;
-  });
-  const [username, setUsername] = useState<string | null>(() => {
-    return localStorage.getItem('username');
-  });
 
-  // Auth check is synchronous (from localStorage), so no loading state needed
+    if (token && isValidToken()) {
+      // Token exists and is valid
+      const usernameFromToken = getUsernameFromToken(token);
+      return {
+        isAuthenticated: true,
+        username: usernameFromToken || localStorage.getItem('username'),
+      };
+    } else {
+      // Token is missing or expired - clear everything
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      return {
+        isAuthenticated: false,
+        username: null,
+      };
+    }
+  };
+
+  const initialState = getInitialAuthState();
+  const [isAuthenticated, setIsAuthenticated] = useState(initialState.isAuthenticated);
+  const [username, setUsername] = useState<string | null>(initialState.username);
+
+  // No loading state needed since token validation is synchronous
   const isLoading = false;
 
   const login = async (username: string, password: string) => {
