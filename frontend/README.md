@@ -12,6 +12,7 @@ Modern expense tracking web application built with React 19, TypeScript, and sha
 - **UI Components**: shadcn/ui + Radix UI
 - **Styling**: Tailwind CSS v4
 - **Icons**: Lucide React
+- **Charts**: Recharts
 - **Package Manager**: pnpm
 
 ## Quick Start
@@ -235,7 +236,7 @@ import { cn } from '@/lib/utils';
   - Total expenses
   - Average expense
   - Category count
-  - Recent expense list
+  - Pie chart visualizations (Spend by Category, Spend by Bank, Income vs Expenses)
 - Protected route system
 - Clean, modern UI following shadcn design patterns
 

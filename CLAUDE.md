@@ -26,6 +26,7 @@ Frugal Fox is a full-stack expense tracking application with a JWT-authenticated
 - shadcn/ui + Radix UI (component library)
 - Tailwind CSS v4 (styling)
 - Lucide React (icons)
+- Recharts (data visualization)
 - pnpm (package manager)
 
 **Infrastructure:**
