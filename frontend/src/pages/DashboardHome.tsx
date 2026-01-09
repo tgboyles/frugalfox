@@ -4,19 +4,93 @@ import { useQuery } from '@tanstack/react-query';
 import { expenseApi } from '@/lib/api';
 import { type Expense } from '@/lib/types';
 import { TrendingUp, TrendingDown, Receipt, DollarSign } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { useMemo } from 'react';
+
+// Color palette for charts
+const COLORS = [
+  '#f97316', // orange (accent color)
+  '#0ea5e9', // sky blue
+  '#8b5cf6', // purple
+  '#10b981', // green
+  '#f59e0b', // amber
+  '#ec4899', // pink
+  '#06b6d4', // cyan
+  '#6366f1', // indigo
+  '#84cc16', // lime
+  '#ef4444', // red
+];
 
 export default function DashboardHome() {
   const { data: expensesData, isLoading } = useQuery({
-    queryKey: ['expenses', { page: 0, size: 100 }],
-    queryFn: () => expenseApi.getExpenses({ page: 0, size: 100 }),
+    queryKey: ['expenses', { page: 0, size: 1000 }],
+    queryFn: () => expenseApi.getExpenses({ page: 0, size: 1000 }),
+    // Note: Fetching 1000 records for comprehensive analytics.
+    // For production with large datasets, consider implementing server-side aggregation
   });
 
   const expenses = expensesData?.data.content || [];
 
-  // Calculate metrics
-  const totalExpenses = expenses.reduce((sum: number, expense: Expense) => sum + expense.amount, 0);
-  const averageExpense = expenses.length > 0 ? totalExpenses / expenses.length : 0;
-  const categoryCount = new Set(expenses.map((e: Expense) => e.category)).size;
+  // Calculate metrics - memoized to avoid recalculation on every render
+  const { totalExpenses, averageExpense, categoryCount } = useMemo(() => {
+    const total = expenses.reduce((sum: number, expense: Expense) => sum + expense.amount, 0);
+    const average = expenses.length > 0 ? total / expenses.length : 0;
+    const categories = new Set(expenses.map((e: Expense) => e.category)).size;
+    return {
+      totalExpenses: total,
+      averageExpense: average,
+      categoryCount: categories,
+    };
+  }, [expenses]);
+
+  // Aggregate data by category - memoized to avoid recalculation on every render
+  const categoryChartData = useMemo(() => {
+    const categoryData = expenses.reduce((acc: Record<string, number>, expense: Expense) => {
+      acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
+      return acc;
+    }, {});
+
+    return Object.entries(categoryData).map(([name, value]) => ({
+      name,
+      value: Number((value as number).toFixed(2)),
+    }));
+  }, [expenses]);
+
+  // Aggregate data by bank - memoized to avoid recalculation on every render
+  const bankChartData = useMemo(() => {
+    const bankData = expenses.reduce((acc: Record<string, number>, expense: Expense) => {
+      const bank = expense.bank || 'Unknown';
+      acc[bank] = (acc[bank] || 0) + expense.amount;
+      return acc;
+    }, {});
+
+    return Object.entries(bankData).map(([name, value]) => ({
+      name,
+      value: Number((value as number).toFixed(2)),
+    }));
+  }, [expenses]);
+
+  // Separate refunds and expenses - memoized to avoid recalculation on every render
+  // Business logic: Negative amounts represent refunds (e.g., returns, reimbursements)
+  // Positive amounts represent regular expenses
+  const refundsExpenseChartData = useMemo(() => {
+    const refundsExpenseData = expenses.reduce(
+      (acc: { refunds: number; expenses: number }, expense: Expense) => {
+        if (expense.amount < 0) {
+          acc.refunds += Math.abs(expense.amount);
+        } else {
+          acc.expenses += expense.amount;
+        }
+        return acc;
+      },
+      { refunds: 0, expenses: 0 }
+    );
+
+    return [
+      { name: 'Refunds', value: Number(refundsExpenseData.refunds.toFixed(2)) },
+      { name: 'Expenses', value: Number(refundsExpenseData.expenses.toFixed(2)) },
+    ].filter((item) => item.value > 0); // Only show non-zero values
+  }, [expenses]);
 
   return (
     <div className="space-y-6">
@@ -88,33 +162,125 @@ export default function DashboardHome() {
         </Card>
       </div>
 
-      <Card className="p-6">
-        <h3 className="mb-4 text-lg font-semibold">Recent Expenses</h3>
-        {isLoading ? (
-          <p className="text-muted-foreground">Loading...</p>
-        ) : expenses.length === 0 ? (
-          <p className="text-muted-foreground">
-            No expenses yet. Add your first expense to get started!
-          </p>
-        ) : (
-          <div className="space-y-4">
-            {expenses.slice(0, 5).map((expense: Expense) => (
-              <div
-                key={expense.id}
-                className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
-              >
-                <div>
-                  <p className="font-medium">{expense.merchant}</p>
-                  <p className="text-muted-foreground text-sm">
-                    {expense.category} • {expense.date}
-                  </p>
-                </div>
-                <p className="font-semibold">${expense.amount.toFixed(2)}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
+      {/* Pie Charts Section */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Spend by Category */}
+        <Card className="p-6">
+          <h3 className="mb-4 text-lg font-semibold">Spend by Category</h3>
+          {isLoading ? (
+            <div className="text-muted-foreground flex h-[300px] items-center justify-center">
+              Loading...
+            </div>
+          ) : categoryChartData.length === 0 ? (
+            <div className="text-muted-foreground flex h-[300px] items-center justify-center text-center">
+              No expense data available
+            </div>
+          ) : (
+            <ResponsiveContainer
+              width="100%"
+              height={300}
+              role="img"
+              aria-label="Pie chart showing spending distribution by category"
+            >
+              <PieChart>
+                <Pie
+                  data={categoryChartData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ percent }) => `${((percent ?? 0) * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  dataKey="value"
+                >
+                  {categoryChartData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </Card>
+
+        {/* Spend by Bank */}
+        <Card className="p-6">
+          <h3 className="mb-4 text-lg font-semibold">Spend by Bank</h3>
+          {isLoading ? (
+            <div className="text-muted-foreground flex h-[300px] items-center justify-center">
+              Loading...
+            </div>
+          ) : bankChartData.length === 0 ? (
+            <div className="text-muted-foreground flex h-[300px] items-center justify-center text-center">
+              No bank data available
+            </div>
+          ) : (
+            <ResponsiveContainer
+              width="100%"
+              height={300}
+              role="img"
+              aria-label="Pie chart showing spending distribution by bank"
+            >
+              <PieChart>
+                <Pie
+                  data={bankChartData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ percent }) => `${((percent ?? 0) * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  dataKey="value"
+                >
+                  {bankChartData.map((_, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </Card>
+
+        {/* Refunds vs Expenses */}
+        <Card className="p-6">
+          <h3 className="mb-4 text-lg font-semibold">Refunds vs Expenses</h3>
+          {isLoading ? (
+            <div className="text-muted-foreground flex h-[300px] items-center justify-center">
+              Loading...
+            </div>
+          ) : refundsExpenseChartData.length === 0 ? (
+            <div className="text-muted-foreground flex h-[300px] items-center justify-center text-center">
+              No data available
+            </div>
+          ) : (
+            <ResponsiveContainer
+              width="100%"
+              height={300}
+              role="img"
+              aria-label="Pie chart showing refunds versus expenses"
+            >
+              <PieChart>
+                <Pie
+                  data={refundsExpenseChartData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ percent }) => `${((percent ?? 0) * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  dataKey="value"
+                >
+                  {refundsExpenseChartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </Card>
+      </div>
     </div>
   );
 }
