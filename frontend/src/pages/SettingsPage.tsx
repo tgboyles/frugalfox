@@ -29,7 +29,11 @@ export default function SettingsPage() {
   });
 
   // Fetch current user information
-  const { data: currentUser, error: currentUserError, isLoading: isLoadingUser } = useQuery({
+  const {
+    data: currentUser,
+    error: currentUserError,
+    isLoading: isLoadingUser,
+  } = useQuery({
     queryKey: ['currentUser'],
     queryFn: async () => {
       const response = await settingsApi.getCurrentUser();
