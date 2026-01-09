@@ -36,4 +36,13 @@ boolean existsByUsername(String username);
 * @return true if the email exists
 */
 boolean existsByEmail(String email);
+
+/**
+* Checks if an email already exists for a different user.
+*
+* @param email the email to check
+* @param userId the user ID to exclude from the check
+* @return true if the email exists for a different user
+*/
+boolean existsByEmailAndIdNot(String email, Long userId);
 }
