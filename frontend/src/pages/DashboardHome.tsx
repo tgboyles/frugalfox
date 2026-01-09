@@ -4,7 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { expenseApi } from '@/lib/api';
 import { type Expense } from '@/lib/types';
 import { TrendingUp, TrendingDown, Receipt, DollarSign } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { useMemo } from 'react';
 
 // Color palette for charts
 const COLORS = [
@@ -30,53 +31,66 @@ export default function DashboardHome() {
 
   const expenses = expensesData?.data.content || [];
 
-  // Calculate metrics
-  const totalExpenses = expenses.reduce((sum: number, expense: Expense) => sum + expense.amount, 0);
-  const averageExpense = expenses.length > 0 ? totalExpenses / expenses.length : 0;
-  const categoryCount = new Set(expenses.map((e: Expense) => e.category)).size;
+  // Calculate metrics - memoized to avoid recalculation on every render
+  const { totalExpenses, averageExpense, categoryCount } = useMemo(() => {
+    const total = expenses.reduce((sum: number, expense: Expense) => sum + expense.amount, 0);
+    const average = expenses.length > 0 ? total / expenses.length : 0;
+    const categories = new Set(expenses.map((e: Expense) => e.category)).size;
+    return {
+      totalExpenses: total,
+      averageExpense: average,
+      categoryCount: categories,
+    };
+  }, [expenses]);
 
-  // Aggregate data by category
-  const categoryData = expenses.reduce((acc: Record<string, number>, expense: Expense) => {
-    acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
-    return acc;
-  }, {});
-
-  const categoryChartData = Object.entries(categoryData).map(([name, value]) => ({
-    name,
-    value: Number((value as number).toFixed(2)),
-  }));
-
-  // Aggregate data by bank
-  const bankData = expenses.reduce((acc: Record<string, number>, expense: Expense) => {
-    const bank = expense.bank || 'Unknown';
-    acc[bank] = (acc[bank] || 0) + expense.amount;
-    return acc;
-  }, {});
-
-  const bankChartData = Object.entries(bankData).map(([name, value]) => ({
-    name,
-    value: Number((value as number).toFixed(2)),
-  }));
-
-  // Separate income and expenses
-  // Business logic: Negative amounts represent income/refunds (e.g., returns, reimbursements)
-  // Positive amounts represent regular expenses
-  const incomeExpenseData = expenses.reduce(
-    (acc: { income: number; expenses: number }, expense: Expense) => {
-      if (expense.amount < 0) {
-        acc.income += Math.abs(expense.amount);
-      } else {
-        acc.expenses += expense.amount;
-      }
+  // Aggregate data by category - memoized to avoid recalculation on every render
+  const categoryChartData = useMemo(() => {
+    const categoryData = expenses.reduce((acc: Record<string, number>, expense: Expense) => {
+      acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
       return acc;
-    },
-    { income: 0, expenses: 0 }
-  );
+    }, {});
 
-  const incomeExpenseChartData = [
-    { name: 'Income', value: Number(incomeExpenseData.income.toFixed(2)) },
-    { name: 'Expenses', value: Number(incomeExpenseData.expenses.toFixed(2)) },
-  ].filter((item) => item.value > 0); // Only show non-zero values
+    return Object.entries(categoryData).map(([name, value]) => ({
+      name,
+      value: Number((value as number).toFixed(2)),
+    }));
+  }, [expenses]);
+
+  // Aggregate data by bank - memoized to avoid recalculation on every render
+  const bankChartData = useMemo(() => {
+    const bankData = expenses.reduce((acc: Record<string, number>, expense: Expense) => {
+      const bank = expense.bank || 'Unknown';
+      acc[bank] = (acc[bank] || 0) + expense.amount;
+      return acc;
+    }, {});
+
+    return Object.entries(bankData).map(([name, value]) => ({
+      name,
+      value: Number((value as number).toFixed(2)),
+    }));
+  }, [expenses]);
+
+  // Separate refunds and expenses - memoized to avoid recalculation on every render
+  // Business logic: Negative amounts represent refunds (e.g., returns, reimbursements)
+  // Positive amounts represent regular expenses
+  const refundsExpenseChartData = useMemo(() => {
+    const refundsExpenseData = expenses.reduce(
+      (acc: { refunds: number; expenses: number }, expense: Expense) => {
+        if (expense.amount < 0) {
+          acc.refunds += Math.abs(expense.amount);
+        } else {
+          acc.expenses += expense.amount;
+        }
+        return acc;
+      },
+      { refunds: 0, expenses: 0 }
+    );
+
+    return [
+      { name: 'Refunds', value: Number(refundsExpenseData.refunds.toFixed(2)) },
+      { name: 'Expenses', value: Number(refundsExpenseData.expenses.toFixed(2)) },
+    ].filter((item) => item.value > 0); // Only show non-zero values
+  }, [expenses]);
 
   return (
     <div className="space-y-6">
@@ -162,14 +176,14 @@ export default function DashboardHome() {
               No expense data available
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={300} role="img" aria-label="Pie chart showing spending distribution by category">
               <PieChart>
                 <Pie
                   data={categoryChartData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                  label={({ percent }) => `${((percent ?? 0) * 100).toFixed(0)}%`}
                   outerRadius={80}
                   dataKey="value"
                 >
@@ -178,6 +192,7 @@ export default function DashboardHome() {
                   ))}
                 </Pie>
                 <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} />
+                <Legend />
               </PieChart>
             </ResponsiveContainer>
           )}
@@ -195,16 +210,15 @@ export default function DashboardHome() {
               No bank data available
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={300} role="img" aria-label="Pie chart showing spending distribution by bank">
               <PieChart>
                 <Pie
                   data={bankChartData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                  label={({ percent }) => `${((percent ?? 0) * 100).toFixed(0)}%`}
                   outerRadius={80}
-                  fill="#8884d8"
                   dataKey="value"
                 >
                   {bankChartData.map((_, index) => (
@@ -212,43 +226,44 @@ export default function DashboardHome() {
                   ))}
                 </Pie>
                 <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} />
+                <Legend />
               </PieChart>
             </ResponsiveContainer>
           )}
         </Card>
 
-        {/* Income vs Expenses */}
+        {/* Refunds vs Expenses */}
         <Card className="p-6">
-          <h3 className="mb-4 text-lg font-semibold">Income vs Expenses</h3>
+          <h3 className="mb-4 text-lg font-semibold">Refunds vs Expenses</h3>
           {isLoading ? (
             <div className="text-muted-foreground flex h-[300px] items-center justify-center">
               Loading...
             </div>
-          ) : incomeExpenseChartData.length === 0 ? (
+          ) : refundsExpenseChartData.length === 0 ? (
             <div className="text-muted-foreground flex h-[300px] items-center justify-center text-center">
               No data available
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={300} role="img" aria-label="Pie chart showing refunds versus expenses">
               <PieChart>
                 <Pie
-                  data={incomeExpenseChartData}
+                  data={refundsExpenseChartData}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
+                  label={({ percent }) => `${((percent ?? 0) * 100).toFixed(0)}%`}
                   outerRadius={80}
-                  fill="#8884d8"
                   dataKey="value"
                 >
-                  {incomeExpenseChartData.map((entry, index) => (
+                  {refundsExpenseChartData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={entry.name === 'Income' ? '#10b981' : '#f97316'}
+                      fill={COLORS[index % COLORS.length]}
                     />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} />
+                <Legend />
               </PieChart>
             </ResponsiveContainer>
           )}
