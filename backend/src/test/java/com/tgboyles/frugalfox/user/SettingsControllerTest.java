@@ -2,6 +2,7 @@ package com.tgboyles.frugalfox.user;
 
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -58,6 +59,27 @@ public class SettingsControllerTest {
 		String responseBody = result.getResponse().getContentAsString();
 		JsonNode jsonNode = objectMapper.readTree(responseBody);
 		return jsonNode.get("token").asText();
+	}
+
+	@Test
+	public void testGetCurrentUserSuccess() throws Exception {
+		String token = registerAndGetToken("testuser", "password123", "test@example.com");
+
+		mvc.perform(
+				get("/settings/user")
+					.header("Authorization", "Bearer " + token))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.username").value("testuser"))
+			.andExpect(jsonPath("$.email").value("test@example.com"))
+			.andExpect(jsonPath("$.id", notNullValue()))
+			.andExpect(jsonPath("$.createdAt", notNullValue()))
+			.andExpect(jsonPath("$.updatedAt", notNullValue()));
+	}
+
+	@Test
+	public void testGetCurrentUserUnauthorized() throws Exception {
+		mvc.perform(get("/settings/user"))
+			.andExpect(status().isForbidden());
 	}
 
 	@Test

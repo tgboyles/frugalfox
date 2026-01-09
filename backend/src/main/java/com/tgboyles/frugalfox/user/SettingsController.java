@@ -2,6 +2,7 @@ package com.tgboyles.frugalfox.user;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +23,18 @@ public class SettingsController {
 
 	public SettingsController(UserService userService) {
 		this.userService = userService;
+	}
+
+	/**
+	 * Gets the authenticated user's information.
+	 *
+	 * @param user the authenticated user
+	 * @return the user details
+	 */
+	@GetMapping("/user")
+	public ResponseEntity<UserResponse> getCurrentUser(@AuthenticationPrincipal User user) {
+		UserResponse response = new UserResponse(user);
+		return ResponseEntity.ok(response);
 	}
 
 	/**
