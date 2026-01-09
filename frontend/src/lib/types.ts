@@ -59,3 +59,15 @@ export type ErrorResponse = {
   message: string;
   path: string;
 };
+
+export type UserResponse = {
+  id: number;
+  username: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MessageResponse = {
+  message: string;
+};
