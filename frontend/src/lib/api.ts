@@ -96,6 +96,16 @@ export const expenseApi = {
       params,
       responseType: 'blob',
     }),
+
+  importExpenses: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/expenses/import', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
 };
 
 export const settingsApi = {
