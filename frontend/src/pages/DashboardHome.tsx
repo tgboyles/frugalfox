@@ -176,7 +176,12 @@ export default function DashboardHome() {
               No expense data available
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={300} role="img" aria-label="Pie chart showing spending distribution by category">
+            <ResponsiveContainer
+              width="100%"
+              height={300}
+              role="img"
+              aria-label="Pie chart showing spending distribution by category"
+            >
               <PieChart>
                 <Pie
                   data={categoryChartData}
@@ -210,7 +215,12 @@ export default function DashboardHome() {
               No bank data available
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={300} role="img" aria-label="Pie chart showing spending distribution by bank">
+            <ResponsiveContainer
+              width="100%"
+              height={300}
+              role="img"
+              aria-label="Pie chart showing spending distribution by bank"
+            >
               <PieChart>
                 <Pie
                   data={bankChartData}
@@ -244,7 +254,12 @@ export default function DashboardHome() {
               No data available
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={300} role="img" aria-label="Pie chart showing refunds versus expenses">
+            <ResponsiveContainer
+              width="100%"
+              height={300}
+              role="img"
+              aria-label="Pie chart showing refunds versus expenses"
+            >
               <PieChart>
                 <Pie
                   data={refundsExpenseChartData}
@@ -256,10 +271,7 @@ export default function DashboardHome() {
                   dataKey="value"
                 >
                   {refundsExpenseChartData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} />
