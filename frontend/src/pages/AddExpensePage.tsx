@@ -269,14 +269,16 @@ export default function AddExpensePage() {
                     <p className="text-xs">
                       <strong>Example:</strong>
                     </p>
-                    <code className="bg-muted block rounded p-2 font-mono text-xs">
-                      2024-01-15,Starbucks,5.50,Chase,Food{'\n'}
-                      2024-01-16,Amazon,29.99,Chase,Shopping
+                    <code className="bg-muted block rounded p-2 font-mono text-xs whitespace-pre">
+                      {`2024-01-15,Starbucks,5.50,Chase,Food
+2024-01-16,Amazon,29.99,Chase,Shopping`}
                     </code>
-                    <p className="text-xs">
-                      • Date format: YYYY-MM-DD{'\n'}• Amount: positive decimal number{'\n'}• Max
-                      file size: 1MB{'\n'}• Max rows: 1000
-                    </p>
+                    <ul className="list-inside list-disc space-y-1 text-xs">
+                      <li>Date format: YYYY-MM-DD</li>
+                      <li>Amount: positive decimal number</li>
+                      <li>Max file size: 1MB</li>
+                      <li>Max rows: 1000</li>
+                    </ul>
                   </div>
                 </TooltipContent>
               </Tooltip>
