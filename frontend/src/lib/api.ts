@@ -99,6 +99,8 @@ export const expenseApi = {
 };
 
 export const settingsApi = {
+  getCurrentUser: () => api.get('/settings/user'),
+
   updateEmail: (email: string) => api.put('/settings/email', { email }),
 
   updatePassword: (currentPassword: string, newPassword: string) =>

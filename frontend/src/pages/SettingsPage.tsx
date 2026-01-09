@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { settingsApi, expenseApi } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { type MessageResponse, type UserResponse } from '@/lib/types';
@@ -26,6 +26,15 @@ export default function SettingsPage() {
     maxAmount: '',
     startDate: '',
     endDate: '',
+  });
+
+  // Fetch current user information
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      const response = await settingsApi.getCurrentUser();
+      return response.data as UserResponse;
+    },
   });
 
   // Email update mutation
@@ -138,6 +147,10 @@ export default function SettingsPage() {
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground">Username:</span>
             <span className="font-medium">{username}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground">Email:</span>
+            <span className="font-medium">{currentUser?.email || 'Loading...'}</span>
           </div>
         </div>
       </Card>
