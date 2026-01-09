@@ -22,8 +22,14 @@ export function decodeToken(token: string): JwtPayload | null {
     }
 
     // Decode the payload (second part)
-    const payload = parts[1];
-    const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+    let payload = parts[1];
+    // Add padding if needed for Base64 decoding
+    payload = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const padding = payload.length % 4;
+    if (padding > 0) {
+      payload += '='.repeat(4 - padding);
+    }
+    const decoded = atob(payload);
     return JSON.parse(decoded) as JwtPayload;
   } catch (error) {
     console.error('Failed to decode token:', error);
