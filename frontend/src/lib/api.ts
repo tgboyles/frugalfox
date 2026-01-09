@@ -79,4 +79,28 @@ export const expenseApi = {
   ) => api.put(`/expenses/${id}`, expense),
 
   deleteExpense: (id: number) => api.delete(`/expenses/${id}`),
+
+  exportExpenses: (params?: {
+    category?: string;
+    merchant?: string;
+    bank?: string;
+    minAmount?: number;
+    maxAmount?: number;
+    startDate?: string;
+    endDate?: string;
+    page?: number;
+    size?: number;
+    sort?: string;
+  }) =>
+    api.get('/expenses/export', {
+      params,
+      responseType: 'blob',
+    }),
+};
+
+export const settingsApi = {
+  updateEmail: (email: string) => api.put('/settings/email', { email }),
+
+  updatePassword: (currentPassword: string, newPassword: string) =>
+    api.put('/settings/password', { currentPassword, newPassword }),
 };
