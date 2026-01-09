@@ -269,18 +269,13 @@ export default function AddExpensePage() {
                     <p className="text-xs">
                       <strong>Example:</strong>
                     </p>
-                    <code className="bg-muted block rounded p-2 text-xs">
-                      2024-01-15,Starbucks,5.50,Chase,Food
-                      <br />
+                    <code className="bg-muted block rounded p-2 font-mono text-xs">
+                      2024-01-15,Starbucks,5.50,Chase,Food{'\n'}
                       2024-01-16,Amazon,29.99,Chase,Shopping
                     </code>
                     <p className="text-xs">
-                      • Date format: YYYY-MM-DD
-                      <br />
-                      • Amount: positive decimal number
-                      <br />
-                      • Max file size: 1MB
-                      <br />• Max rows: 1000
+                      • Date format: YYYY-MM-DD{'\n'}• Amount: positive decimal number{'\n'}• Max
+                      file size: 1MB{'\n'}• Max rows: 1000
                     </p>
                   </div>
                 </TooltipContent>
@@ -295,7 +290,7 @@ export default function AddExpensePage() {
                 <Input
                   id="csv-file"
                   type="file"
-                  accept=".csv,text/csv,application/csv"
+                  accept=".csv,text/csv"
                   onChange={handleFileChange}
                   className="flex-1"
                 />
