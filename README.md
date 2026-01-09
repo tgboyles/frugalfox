@@ -16,6 +16,7 @@ Frugal Fox is a demonstrative budgeting application that showcases:
 - Secure user registration and authentication
 - Expense CRUD operations with advanced filtering
 - Bulk CSV import for expenses (up to 1000 rows)
+- CSV export with filters for backup and analysis
 - Real-time search across categories, merchants, dates, and amounts
 - Responsive web interface built with React and shadcn/ui
 - MCP integration for AI-assisted expense management

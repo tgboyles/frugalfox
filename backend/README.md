@@ -277,6 +277,7 @@ POST /auth/login     # Login with credentials
 GET    /expenses          # List/search expenses (with filters)
 POST   /expenses          # Create expense
 POST   /expenses/import   # Bulk import expenses from CSV
+GET    /expenses/export   # Export expenses to CSV (with filters)
 GET    /expenses/{id}     # Get expense by ID
 PUT    /expenses/{id}     # Update expense
 DELETE /expenses/{id}     # Delete expense
@@ -347,6 +348,65 @@ If some rows fail validation, valid rows are still imported:
 
 **Sample CSV File:**
 A sample CSV file is available at `backend/sample-expenses.csv` for testing.
+
+### Export Expenses to CSV
+
+Export your expenses to CSV format for backup, analysis, or use with other tools.
+
+**Endpoint:**
+```
+GET /expenses/export
+```
+
+**Features:**
+- Exports all expenses matching your search criteria
+- Same CSV format as import (compatible for round-trip)
+- Supports all search filters (category, bank, merchant, date range, amount range)
+- Returns a downloadable CSV file with proper headers
+
+**CSV Format (same as import):**
+```csv
+date,merchant,amount,bank,category
+2025-01-01,Whole Foods,125.50,Chase,Groceries
+2025-01-02,Shell Gas Station,45.00,Chase,Transportation
+2025-01-03,Target,75.00,BofA,Shopping
+```
+
+**Example Requests:**
+
+Export all expenses:
+```bash
+curl -X GET http://localhost:8080/expenses/export \
+  -H "Authorization: Bearer $TOKEN" \
+  -o expenses.csv
+```
+
+Export with filters (e.g., only groceries from January 2025):
+```bash
+curl -X GET "http://localhost:8080/expenses/export?category=Groceries&startDate=2025-01-01&endDate=2025-01-31" \
+  -H "Authorization: Bearer $TOKEN" \
+  -o groceries-jan-2025.csv
+```
+
+Export sorted by date descending:
+```bash
+curl -X GET "http://localhost:8080/expenses/export?sort=date,desc" \
+  -H "Authorization: Bearer $TOKEN" \
+  -o expenses-latest.csv
+```
+
+**Response Headers:**
+```
+Content-Type: text/csv
+Content-Disposition: attachment; filename="expenses.csv"
+```
+
+**Use Cases:**
+- Backup your expense data
+- Analyze expenses in Excel or Google Sheets
+- Migrate data to another expense tracking system
+- Share filtered expense reports with others
+- Create periodic expense reports (monthly, quarterly, etc.)
 
 ## Configuration
 
