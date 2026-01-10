@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,39 @@ export default function AuthPage() {
 
   const { login, register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Force light mode on login page using MutationObserver
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    const hadDarkClass = root.classList.contains('dark');
+    
+    // Remove dark class immediately
+    root.classList.remove('dark');
+    
+    // Watch for any attempts to add the dark class back and remove it
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          if (root.classList.contains('dark')) {
+            root.classList.remove('dark');
+          }
+        }
+      });
+    });
+    
+    observer.observe(root, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    // Restore previous state when component unmounts
+    return () => {
+      observer.disconnect();
+      if (hadDarkClass) {
+        root.classList.add('dark');
+      }
+    };
+  }, []);
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
