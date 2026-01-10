@@ -53,7 +53,7 @@ Frugal Fox is a demonstrative budgeting application that showcases:
 
 ### Full Stack with Docker Compose
 
-Start all services (PostgreSQL + Backend + MCP Server + Frontend dev server):
+Start all services (PostgreSQL + Backend + MCP Server + Frontend):
 
 ```bash
 docker compose up --build
@@ -63,17 +63,18 @@ This starts:
 - **PostgreSQL database** on port 5432
 - **Backend API** on port 8080: http://localhost:8080
 - **MCP Server** on port 8081: http://localhost:8081
-- **Frontend** requires separate terminal (see below)
+- **Frontend** on port 3000: http://localhost:3000
 
 Health checks:
 ```bash
 curl http://localhost:8080/actuator/health  # Backend API
 curl http://localhost:8081/actuator/health  # MCP Server
+curl http://localhost:3000                   # Frontend (nginx)
 ```
 
 ### Frontend Development Server
 
-In a separate terminal:
+For frontend development with hot reload, run the dev server locally in a separate terminal:
 
 ```bash
 cd frontend
@@ -81,7 +82,7 @@ pnpm install
 pnpm dev
 ```
 
-Access the web app at http://localhost:5173
+Access the development server at http://localhost:5173
 
 ### Backend Only (Local Development)
 

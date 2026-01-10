@@ -21,6 +21,7 @@ Modern expense tracking web application built with React 19, TypeScript, and sha
 
 - Node.js 18+ (or compatible runtime)
 - pnpm (recommended) or npm
+- Docker & Docker Compose (for containerized deployment)
 
 ### Installation
 
@@ -59,6 +60,25 @@ Preview the production build:
 ```bash
 pnpm preview
 ```
+
+### Docker Deployment
+
+The frontend application is fully containerized and can be run as part of the full-stack Docker Compose setup:
+
+```bash
+# From project root
+docker compose up --build
+```
+
+This starts the frontend on http://localhost:3000 along with the backend, database, and MCP server.
+
+The Docker setup uses:
+- **Multi-stage build** with Node.js for building and nginx for serving
+- **nginx** for production-grade static file serving with:
+  - SPA routing support (React Router)
+  - Gzip compression
+  - Optimized caching headers
+  - Security headers
 
 ### Testing
 
