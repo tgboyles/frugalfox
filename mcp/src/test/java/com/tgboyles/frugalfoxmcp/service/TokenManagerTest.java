@@ -158,6 +158,7 @@ class TokenManagerTest {
         String username1 = "user1";
         String username2 = "user2";
         char[] password1 = "pass1".toCharArray();
+        char[] password1Again = "pass1".toCharArray();
         char[] password2a = "pass2".toCharArray();
         char[] password2b = "pass2".toCharArray();
         String token1 = createValidToken(3600);
@@ -176,7 +177,7 @@ class TokenManagerTest {
         tokenManager.clearToken(username2);
 
         // Request tokens again
-        tokenManager.getValidToken(username1, "pass1".toCharArray()); // Should use cache
+        tokenManager.getValidToken(username1, password1Again); // Should use cache
         tokenManager.getValidToken(username2, password2b); // Should call API
 
         // Assert
