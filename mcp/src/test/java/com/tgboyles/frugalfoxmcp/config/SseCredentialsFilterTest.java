@@ -131,7 +131,7 @@ class SseCredentialsFilterTest {
     @Test
     void doFilter_SseEndpointWithEmptyCredentials_SetsEmptyCredentials() throws IOException, ServletException {
         // Arrange
-        when(httpRequest.getRequestURI()).thenReturn("/sse");
+        when(httpRequest.getRequestURI()).thenReturn("/mcp/sse");
         when(httpRequest.getHeader("X-Frugalfox-Username")).thenReturn("");
         when(httpRequest.getHeader("X-Frugalfox-Password")).thenReturn("");
 
