@@ -83,10 +83,27 @@ Run TypeScript type checking:
 pnpm build
 ```
 
-Run linter:
+Run linter (includes accessibility checks):
 ```bash
 pnpm lint
 ```
+
+Run linter in watch mode:
+```bash
+pnpm lint:watch
+```
+
+**Accessibility Testing:**
+
+The project includes automated accessibility testing via ESLint and [eslint-plugin-jsx-a11y](https://github.com/jsx-eslint/eslint-plugin-jsx-a11y). This ensures compliance with web accessibility standards (WCAG) at build time and during development.
+
+Accessibility checks include:
+- Proper ARIA attributes and roles
+- Keyboard navigation support
+- Alt text on images without redundant words
+- Semantic HTML usage
+- Interactive element accessibility
+- Click handlers paired with keyboard handlers
 
 ## Project Architecture
 
@@ -388,7 +405,7 @@ import { expenseApi } from '@/lib/api';
 
 **Before submitting code:**
 1. Run type checking: `pnpm build`
-2. Run linter: `pnpm lint`
+2. Run linter with accessibility checks: `pnpm lint`
 3. Test in browser (dev server: `pnpm dev`)
 4. Verify responsive design (mobile, tablet, desktop)
 
@@ -396,8 +413,9 @@ import { expenseApi } from '@/lib/api';
 - All new components must be TypeScript
 - Follow existing patterns in similar components
 - Use shadcn/ui components where possible
-- Ensure accessibility (ARIA labels, keyboard navigation)
+- Ensure accessibility (ARIA labels, keyboard navigation, proper roles)
 - Mobile-first responsive design
+- Pass all accessibility linting rules
 
 ### Pull Request Checklist
 
