@@ -64,7 +64,7 @@ The recommended configuration enforces WCAG 2.1 Level A & AA standards, includin
 # Run linting once
 pnpm lint
 
-# Run linting in watch mode (auto-fixes on save)
+# Run linting in watch mode
 pnpm lint:watch
 ```
 
