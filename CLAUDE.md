@@ -258,27 +258,50 @@ frugal_fox/
 
 ### Testing Requirements
 
-1. **Test Coverage**
+1. **Core Principles of Good Unit Tests**
+
+   - **Fast**: Tests should run quickly (milliseconds) to encourage frequent execution
+   - **Isolated/Independent**: Each test should be an island, running in isolation without dependencies on other tests or external factors like the order of execution, databases, or network calls
+   - **Repeatable/Deterministic**: A test should produce the same result every time it runs, provided the production code hasn't changed
+   - **Self-Checking**: Tests must automatically determine if they passed or failed without human intervention
+   - **Timely**: Write tests alongside or even before the code (Test-Driven Development) to ensure testability is designed in from the start
+
+2. **Key Best Practices**
+
+   - **Structure with the "Arrange, Act, Assert" (AAA) Pattern**: This common structure improves readability and clearly separates the setup, execution, and verification phases of a test
+     - **Arrange**: Set up the test environment and objects
+     - **Act**: Execute the specific method or unit under test
+     - **Assert**: Verify that the outcome matches the expected result
+   - **Use Descriptive Naming Conventions**: Test names should be clear and concise, documenting the method's behavior. A helpful pattern is `MethodName_StateUnderTest_ExpectedBehavior` (e.g., `createExpense_ValidInput_ReturnsExpense`) or describe the behavior being tested (e.g., `shouldReturnExpenseWhenUserOwnsIt`)
+   - **Test a Single Concern/Behavior**: Each test method should focus on verifying one specific use case or behavior. This makes debugging easier, as a failure points to an exact issue
+   - **Mock External Dependencies**: Isolate the code under test by using test doubles (mocks, stubs, fakes) for external dependencies like databases, file systems, or external APIs. This keeps tests fast and prevents failures in dependencies from breaking the unit test
+   - **Avoid Logic in Tests**: The test code itself should be simple and avoid control flow logic (if, while, for loops), which can introduce bugs into the tests. Use hard-coded expected values instead of recalculating the logic you are trying to test
+   - **Write Tests for Both Positive and Negative Scenarios**: Ensure robust code by testing for both expected outcomes (valid inputs) and unexpected outcomes (edge cases, invalid inputs, error handling)
+   - **Integrate Tests into the Build Process**: Automate test execution as part of your CI/CD pipeline. Running tests on every commit helps catch regressions early
+   - **Treat Test Code as Production Code**: Maintain the quality of your test suite. Refactor test code when needed, use good variable names, and ensure tests are reviewed
+   - **Design for Testability**: Write loosely coupled code by following principles like dependency injection. Code that is easy to test is often better designed and more modular
+
+3. **Test Coverage**
 
    - Write tests for all new features and bug fixes
    - Unit tests for service layer (mock repositories)
    - Integration tests for controllers (MockMvc + SpringBootTest)
    - See existing tests in `src/test/java/com/tgboyles/frugalfox/`
 
-2. **Test Database**
+4. **Test Database**
 
    - Tests use H2 in-memory database with PostgreSQL compatibility mode
    - Flyway migrations run in test profile to validate schema
    - Configuration in `src/test/resources/application.properties`
 
-3. **Test Organization**
+5. **Test Organization**
 
-   - Name tests clearly: `shouldReturnExpenseWhenUserOwnsIt()`
+   - Name tests clearly using descriptive patterns: `shouldReturnExpenseWhenUserOwnsIt()` or `testMethodName_StateUnderTest_ExpectedBehavior()`
    - Use `@SpringBootTest` for integration tests
-   - Use `@MockBean` for unit tests with mocked dependencies
+   - Use `@MockBean` or `@Mock` for unit tests with mocked dependencies
    - Examples: [ExpenseControllerTest.java](backend/src/main/java/com/tgboyles/frugalfox/expense/ExpenseControllerTest.java), [ExpenseServiceTest.java](backend/src/main/java/com/tgboyles/frugalfox/expense/ExpenseServiceTest.java)
 
-4. **Running Tests**
+6. **Running Tests**
    - Run all tests: `mvn test`
    - Run specific test: `mvn test -Dtest=ExpenseControllerTest`
    - Build with tests: `mvn clean package`

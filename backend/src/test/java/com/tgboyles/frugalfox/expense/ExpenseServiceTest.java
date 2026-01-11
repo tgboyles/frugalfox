@@ -68,7 +68,8 @@ public void setup() {
 }
 
 @Test
-public void testCreateExpense() {
+public void createExpense_ValidInput_SetsUserAndSavesExpense() {
+	// Arrange
 	Expense newExpense = new Expense();
 	newExpense.setDate(LocalDate.of(2025, 12, 26));
 	newExpense.setMerchant("Target");
@@ -78,8 +79,10 @@ public void testCreateExpense() {
 
 	when(expenseRepository.save(any(Expense.class))).thenReturn(testExpense);
 
+	// Act
 	Expense result = expenseService.createExpense(newExpense, testUser);
 
+	// Assert
 	assertThat(result).isNotNull();
 	assertThat(result.getUser()).isEqualTo(testUser);
 	verify(expenseRepository).save(any(Expense.class));
