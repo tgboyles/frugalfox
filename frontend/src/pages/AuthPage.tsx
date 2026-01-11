@@ -28,10 +28,10 @@ export default function AuthPage() {
   useLayoutEffect(() => {
     const root = document.documentElement;
     const hadDarkClass = root.classList.contains('dark');
-    
+
     // Remove dark class immediately
     root.classList.remove('dark');
-    
+
     // Watch for any attempts to add the dark class back and remove it
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
@@ -42,12 +42,12 @@ export default function AuthPage() {
         }
       });
     });
-    
+
     observer.observe(root, {
       attributes: true,
-      attributeFilter: ['class']
+      attributeFilter: ['class'],
     });
-    
+
     // Restore previous state when component unmounts
     return () => {
       observer.disconnect();
