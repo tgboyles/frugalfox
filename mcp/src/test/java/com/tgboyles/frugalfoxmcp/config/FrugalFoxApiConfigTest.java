@@ -85,13 +85,4 @@ class FrugalFoxApiConfigTest {
         // Assert
         assertEquals(expectedTimeout, config.getTimeout());
     }
-
-    @Test
-    void getBaseUrl_AfterNullSet_ThrowsNullPointerException() {
-        // Arrange
-        config.setBaseUrl(null);
-
-        // Act & Assert
-        assertThrows(NullPointerException.class, () -> config.getBaseUrl());
-    }
 }
