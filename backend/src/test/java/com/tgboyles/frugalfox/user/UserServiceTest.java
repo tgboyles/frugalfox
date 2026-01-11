@@ -27,27 +27,32 @@ public class UserServiceTest {
 	}
 
 	@Test
-	public void testUpdateEmailSuccess() {
+	public void updateEmail_NewEmail_UpdatesEmailSuccessfully() {
+		// Arrange
 		User user = new User("testuser", "hashedPassword", "old@example.com");
 		user.setId(1L);
 
 		when(userRepository.existsByEmailAndIdNot("new@example.com", 1L)).thenReturn(false);
 		when(userRepository.save(any(User.class))).thenReturn(user);
 
+		// Act
 		User result = userService.updateEmail(user, "new@example.com");
 
+		// Assert
 		assertEquals("new@example.com", result.getEmail());
 		verify(userRepository).existsByEmailAndIdNot("new@example.com", 1L);
 		verify(userRepository).save(user);
 	}
 
 	@Test
-	public void testUpdateEmailDuplicateEmail() {
+	public void updateEmail_DuplicateEmail_ThrowsIllegalArgumentException() {
+		// Arrange
 		User user = new User("testuser", "hashedPassword", "old@example.com");
 		user.setId(1L);
 
 		when(userRepository.existsByEmailAndIdNot("existing@example.com", 1L)).thenReturn(true);
 
+		// Act & Assert
 		IllegalArgumentException exception =
 			assertThrows(
 				IllegalArgumentException.class,
@@ -59,7 +64,8 @@ public class UserServiceTest {
 	}
 
 	@Test
-	public void testUpdatePasswordSuccess() {
+	public void updatePassword_CorrectCurrentPassword_UpdatesPasswordSuccessfully() {
+		// Arrange
 		User user = new User("testuser", "oldHashedPassword", "test@example.com");
 		user.setId(1L);
 
@@ -67,8 +73,10 @@ public class UserServiceTest {
 		when(passwordEncoder.encode("newPassword")).thenReturn("newHashedPassword");
 		when(userRepository.save(any(User.class))).thenReturn(user);
 
+		// Act
 		User result = userService.updatePassword(user, "oldPassword", "newPassword");
 
+		// Assert
 		assertEquals("newHashedPassword", result.getPassword());
 		verify(passwordEncoder).matches("oldPassword", "oldHashedPassword");
 		verify(passwordEncoder).encode("newPassword");
@@ -76,12 +84,14 @@ public class UserServiceTest {
 	}
 
 	@Test
-	public void testUpdatePasswordIncorrectCurrentPassword() {
+	public void updatePassword_IncorrectCurrentPassword_ThrowsIllegalArgumentException() {
+		// Arrange
 		User user = new User("testuser", "hashedPassword", "test@example.com");
 		user.setId(1L);
 
 		when(passwordEncoder.matches("wrongPassword", "hashedPassword")).thenReturn(false);
 
+		// Act & Assert
 		IllegalArgumentException exception =
 			assertThrows(
 				IllegalArgumentException.class,
