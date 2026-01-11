@@ -68,7 +68,8 @@ public void setup() {
 }
 
 @Test
-public void testCreateExpense() {
+public void createExpense_ValidInput_SetsUserAndSavesExpense() {
+	// Arrange
 	Expense newExpense = new Expense();
 	newExpense.setDate(LocalDate.of(2025, 12, 26));
 	newExpense.setMerchant("Target");
@@ -78,34 +79,42 @@ public void testCreateExpense() {
 
 	when(expenseRepository.save(any(Expense.class))).thenReturn(testExpense);
 
+	// Act
 	Expense result = expenseService.createExpense(newExpense, testUser);
 
+	// Assert
 	assertThat(result).isNotNull();
 	assertThat(result.getUser()).isEqualTo(testUser);
 	verify(expenseRepository).save(any(Expense.class));
 }
 
 @Test
-public void testGetExpenseByIdSuccess() {
+public void getExpenseById_ExistingExpense_ReturnsExpense() {
+	// Arrange
 	when(expenseRepository.findByIdAndUser(1L, testUser)).thenReturn(Optional.of(testExpense));
 
+	// Act
 	Expense result = expenseService.getExpenseById(1L, testUser);
 
+	// Assert
 	assertThat(result).isEqualTo(testExpense);
 	verify(expenseRepository).findByIdAndUser(1L, testUser);
 }
 
 @Test
-public void testGetExpenseByIdNotFound() {
+public void getExpenseById_NonExistentExpense_ThrowsExpenseNotFoundException() {
+	// Arrange
 	when(expenseRepository.findByIdAndUser(999L, testUser)).thenReturn(Optional.empty());
 
+	// Act & Assert
 	assertThatThrownBy(() -> expenseService.getExpenseById(999L, testUser))
 		.isInstanceOf(ExpenseNotFoundException.class)
 		.hasMessageContaining("Expense not found with id: 999");
 }
 
 @Test
-public void testUpdateExpenseSuccess() {
+public void updateExpense_ExistingExpense_UpdatesAndSavesExpense() {
+	// Arrange
 	Expense updatedData = new Expense();
 	updatedData.setDate(LocalDate.of(2025, 12, 26));
 	updatedData.setMerchant("Whole Foods Market");
@@ -116,44 +125,54 @@ public void testUpdateExpenseSuccess() {
 	when(expenseRepository.findByIdAndUser(1L, testUser)).thenReturn(Optional.of(testExpense));
 	when(expenseRepository.save(any(Expense.class))).thenReturn(testExpense);
 
+	// Act
 	Expense result = expenseService.updateExpense(1L, updatedData, testUser);
 
+	// Assert
 	assertThat(result).isNotNull();
 	verify(expenseRepository).findByIdAndUser(1L, testUser);
 	verify(expenseRepository).save(any(Expense.class));
 }
 
 @Test
-public void testUpdateExpenseNotFound() {
+public void updateExpense_NonExistentExpense_ThrowsExpenseNotFoundException() {
+	// Arrange
 	Expense updatedData = new Expense();
 	updatedData.setMerchant("Test");
 
 	when(expenseRepository.findByIdAndUser(999L, testUser)).thenReturn(Optional.empty());
 
+	// Act & Assert
 	assertThatThrownBy(() -> expenseService.updateExpense(999L, updatedData, testUser))
 		.isInstanceOf(ExpenseNotFoundException.class);
 }
 
 @Test
-public void testDeleteExpenseSuccess() {
+public void deleteExpense_ExistingExpense_DeletesExpense() {
+	// Arrange
 	when(expenseRepository.findByIdAndUser(1L, testUser)).thenReturn(Optional.of(testExpense));
 
+	// Act
 	expenseService.deleteExpense(1L, testUser);
 
+	// Assert
 	verify(expenseRepository).findByIdAndUser(1L, testUser);
 	verify(expenseRepository).delete(testExpense);
 }
 
 @Test
-public void testDeleteExpenseNotFound() {
+public void deleteExpense_NonExistentExpense_ThrowsExpenseNotFoundException() {
+	// Arrange
 	when(expenseRepository.findByIdAndUser(999L, testUser)).thenReturn(Optional.empty());
 
+	// Act & Assert
 	assertThatThrownBy(() -> expenseService.deleteExpense(999L, testUser))
 		.isInstanceOf(ExpenseNotFoundException.class);
 }
 
 @Test
-public void testSearchExpenses() {
+public void searchExpenses_SingleCriteria_ReturnsMatchingExpenses() {
+	// Arrange
 	ExpenseSearchCriteria criteria = new ExpenseSearchCriteria();
 	criteria.setCategory("Groceries");
 
@@ -163,8 +182,10 @@ public void testSearchExpenses() {
 	when(expenseRepository.findAll(any(Specification.class), any(Pageable.class)))
 		.thenReturn(expectedPage);
 
+	// Act
 	Page<Expense> result = expenseService.searchExpenses(criteria, testUser, pageable);
 
+	// Assert
 	assertThat(result).isNotNull();
 	assertThat(result.getContent()).hasSize(1);
 	assertThat(result.getContent().get(0)).isEqualTo(testExpense);
@@ -172,7 +193,8 @@ public void testSearchExpenses() {
 }
 
 @Test
-public void testSearchExpensesWithMultipleCriteria() {
+public void searchExpenses_MultipleCriteria_ReturnsMatchingExpenses() {
+	// Arrange
 	ExpenseSearchCriteria criteria = new ExpenseSearchCriteria();
 	criteria.setCategory("Groceries");
 	criteria.setBank("Chase");
@@ -185,14 +207,17 @@ public void testSearchExpensesWithMultipleCriteria() {
 	when(expenseRepository.findAll(any(Specification.class), any(Pageable.class)))
 		.thenReturn(expectedPage);
 
+	// Act
 	Page<Expense> result = expenseService.searchExpenses(criteria, testUser, pageable);
 
+	// Assert
 	assertThat(result).isNotNull();
 	verify(expenseRepository).findAll(any(Specification.class), any(Pageable.class));
 }
 
 @Test
-public void testImportExpensesSuccess() {
+public void importExpenses_ValidCsvData_ImportsSuccessfully() {
+	// Arrange
 	String csvContent =
 		"""
 		date,merchant,amount,bank,category
@@ -205,8 +230,10 @@ public void testImportExpensesSuccess() {
 	when(validator.validate(any(Expense.class))).thenReturn(Collections.emptySet());
 	when(expenseRepository.saveAll(any())).thenReturn(Collections.emptyList());
 
+	// Act
 	ImportResult result = expenseService.importExpenses(inputStream, testUser);
 
+	// Assert
 	assertThat(result.getTotalRows()).isEqualTo(2);
 	assertThat(result.getSuccessfulImports()).isEqualTo(2);
 	assertThat(result.getFailedImports()).isEqualTo(0);
@@ -239,7 +266,8 @@ public void testImportExpensesSuccess() {
 }
 
 @Test
-public void testImportExpensesExceedsRowLimit() {
+public void importExpenses_ExceedsRowLimit_ThrowsCsvImportException() {
+	// Arrange
 	StringBuilder csvContent = new StringBuilder("date,merchant,amount,bank,category\n");
 	for (int i = 0; i < 1001; i++) {
 	csvContent.append("2025-01-01,Merchant,10.00,Chase,Category\n");
@@ -248,13 +276,15 @@ public void testImportExpensesExceedsRowLimit() {
 	InputStream inputStream =
 		new ByteArrayInputStream(csvContent.toString().getBytes(StandardCharsets.UTF_8));
 
+	// Act & Assert
 	assertThatThrownBy(() -> expenseService.importExpenses(inputStream, testUser))
 		.isInstanceOf(CsvImportException.class)
 		.hasMessageContaining("exceeds maximum row limit of 1000");
 }
 
 @Test
-public void testImportExpensesInvalidDateFormat() {
+public void importExpenses_InvalidDateFormat_ReturnsImportResultWithErrors() {
+	// Arrange
 	String csvContent =
 		"""
 		date,merchant,amount,bank,category
@@ -263,8 +293,10 @@ public void testImportExpensesInvalidDateFormat() {
 
 	InputStream inputStream = new ByteArrayInputStream(csvContent.getBytes(StandardCharsets.UTF_8));
 
+	// Act
 	ImportResult result = expenseService.importExpenses(inputStream, testUser);
 
+	// Assert
 	assertThat(result.getTotalRows()).isEqualTo(1);
 	assertThat(result.getSuccessfulImports()).isEqualTo(0);
 	assertThat(result.getFailedImports()).isEqualTo(1);
@@ -273,7 +305,8 @@ public void testImportExpensesInvalidDateFormat() {
 }
 
 @Test
-public void testImportExpensesInvalidAmountFormat() {
+public void importExpenses_InvalidAmountFormat_ReturnsImportResultWithErrors() {
+	// Arrange
 	String csvContent =
 		"""
 		date,merchant,amount,bank,category
@@ -282,8 +315,10 @@ public void testImportExpensesInvalidAmountFormat() {
 
 	InputStream inputStream = new ByteArrayInputStream(csvContent.getBytes(StandardCharsets.UTF_8));
 
+	// Act
 	ImportResult result = expenseService.importExpenses(inputStream, testUser);
 
+	// Assert
 	assertThat(result.getTotalRows()).isEqualTo(1);
 	assertThat(result.getSuccessfulImports()).isEqualTo(0);
 	assertThat(result.getFailedImports()).isEqualTo(1);
@@ -292,7 +327,8 @@ public void testImportExpensesInvalidAmountFormat() {
 }
 
 @Test
-public void testImportExpensesMissingColumns() {
+public void importExpenses_MissingColumns_ReturnsImportResultWithErrors() {
+	// Arrange
 	String csvContent =
 		"""
 		date,merchant,amount,bank,category
@@ -301,8 +337,10 @@ public void testImportExpensesMissingColumns() {
 
 	InputStream inputStream = new ByteArrayInputStream(csvContent.getBytes(StandardCharsets.UTF_8));
 
+	// Act
 	ImportResult result = expenseService.importExpenses(inputStream, testUser);
 
+	// Assert
 	assertThat(result.getTotalRows()).isEqualTo(1);
 	assertThat(result.getSuccessfulImports()).isEqualTo(0);
 	assertThat(result.getFailedImports()).isEqualTo(1);
@@ -311,7 +349,8 @@ public void testImportExpensesMissingColumns() {
 }
 
 @Test
-public void testImportExpensesBlankFields() {
+public void importExpenses_BlankFields_ReturnsImportResultWithErrors() {
+	// Arrange
 	String csvContent =
 		"""
 		date,merchant,amount,bank,category
@@ -320,8 +359,10 @@ public void testImportExpensesBlankFields() {
 
 	InputStream inputStream = new ByteArrayInputStream(csvContent.getBytes(StandardCharsets.UTF_8));
 
+	// Act
 	ImportResult result = expenseService.importExpenses(inputStream, testUser);
 
+	// Assert
 	assertThat(result.getTotalRows()).isEqualTo(1);
 	assertThat(result.getSuccessfulImports()).isEqualTo(0);
 	assertThat(result.getFailedImports()).isEqualTo(1);
@@ -331,7 +372,8 @@ public void testImportExpensesBlankFields() {
 
 @Test
 @SuppressWarnings("unchecked")
-public void testImportExpensesValidationFailure() {
+public void importExpenses_ValidationFailure_ReturnsImportResultWithErrors() {
+	// Arrange
 	String csvContent =
 		"""
 		date,merchant,amount,bank,category
@@ -347,8 +389,10 @@ public void testImportExpensesValidationFailure() {
 
 	when(validator.validate(any(Expense.class))).thenReturn(violations);
 
+	// Act
 	ImportResult result = expenseService.importExpenses(inputStream, testUser);
 
+	// Assert
 	assertThat(result.getTotalRows()).isEqualTo(1);
 	assertThat(result.getSuccessfulImports()).isEqualTo(0);
 	assertThat(result.getFailedImports()).isEqualTo(1);
@@ -357,7 +401,8 @@ public void testImportExpensesValidationFailure() {
 }
 
 @Test
-public void testImportExpensesPartialSuccess() {
+public void importExpenses_PartialSuccess_ReturnsImportResultWithMixedResults() {
+	// Arrange
 	String csvContent =
 		"""
 		date,merchant,amount,bank,category
@@ -371,8 +416,10 @@ public void testImportExpensesPartialSuccess() {
 	when(validator.validate(any(Expense.class))).thenReturn(Collections.emptySet());
 	when(expenseRepository.saveAll(any())).thenReturn(Collections.emptyList());
 
+	// Act
 	ImportResult result = expenseService.importExpenses(inputStream, testUser);
 
+	// Assert
 	assertThat(result.getTotalRows()).isEqualTo(3);
 	assertThat(result.getSuccessfulImports()).isEqualTo(2);
 	assertThat(result.getFailedImports()).isEqualTo(1);
@@ -381,8 +428,8 @@ public void testImportExpensesPartialSuccess() {
 }
 
 @Test
-public void testImportExpensesBatchProcessing() {
-	// Create CSV with 250 rows to trigger multiple batches (batch size is 100)
+public void importExpenses_BatchProcessing_ProcessesInMultipleBatches() {
+	// Arrange - Create CSV with 250 rows to trigger multiple batches (batch size is 100)
 	StringBuilder csvContent = new StringBuilder("date,merchant,amount,bank,category\n");
 	for (int i = 0; i < 250; i++) {
 		csvContent.append("2025-01-01,Merchant").append(i).append(",10.00,Chase,Category\n");
@@ -394,8 +441,10 @@ public void testImportExpensesBatchProcessing() {
 	when(validator.validate(any(Expense.class))).thenReturn(Collections.emptySet());
 	when(expenseRepository.saveAll(any())).thenReturn(Collections.emptyList());
 
+	// Act
 	ImportResult result = expenseService.importExpenses(inputStream, testUser);
 
+	// Assert
 	assertThat(result.getTotalRows()).isEqualTo(250);
 	assertThat(result.getSuccessfulImports()).isEqualTo(250);
 	assertThat(result.getFailedImports()).isEqualTo(0);
@@ -406,7 +455,8 @@ public void testImportExpensesBatchProcessing() {
 }
 
 @Test
-public void testExportExpensesToCsv() throws Exception {
+public void exportExpensesToCsv_ValidExpenses_ReturnsCsvString() throws Exception {
+	// Arrange
 	User testUser = new User();
 	testUser.setId(1L);
 	testUser.setUsername("testuser");
@@ -422,8 +472,10 @@ public void testExportExpensesToCsv() throws Exception {
 	ExpenseSearchCriteria criteria = new ExpenseSearchCriteria();
 	Pageable pageable = PageRequest.of(0, 20);
 
+	// Act
 	String csv = expenseService.exportExpensesToCsv(criteria, testUser, pageable);
 
+	// Assert
 	assertThat(csv).isNotNull();
 	assertThat(csv).contains("date,merchant,amount,bank,category");
 	assertThat(csv).contains("2025-01-01,Whole Foods,50.00,Chase,Groceries");
@@ -431,7 +483,8 @@ public void testExportExpensesToCsv() throws Exception {
 }
 
 @Test
-public void testExportExpensesToCsvWithFilters() throws Exception {
+public void exportExpensesToCsv_WithFilters_ReturnsCsvString() throws Exception {
+	// Arrange
 	User testUser = new User();
 	testUser.setId(1L);
 	testUser.setUsername("testuser");
@@ -447,15 +500,18 @@ public void testExportExpensesToCsvWithFilters() throws Exception {
 	criteria.setCategory("Groceries");
 	Pageable pageable = PageRequest.of(0, 20);
 
+	// Act
 	String csv = expenseService.exportExpensesToCsv(criteria, testUser, pageable);
 
+	// Assert
 	assertThat(csv).isNotNull();
 	assertThat(csv).contains("date,merchant,amount,bank,category");
 	assertThat(csv).contains("2025-01-01,Whole Foods,50.00,Chase,Groceries");
 }
 
 @Test
-public void testExportExpensesToCsvEmpty() throws Exception {
+public void exportExpensesToCsv_EmptyExpenseList_ReturnsHeaderOnly() throws Exception {
+	// Arrange
 	User testUser = new User();
 	testUser.setId(1L);
 	testUser.setUsername("testuser");
@@ -466,8 +522,10 @@ public void testExportExpensesToCsvEmpty() throws Exception {
 	ExpenseSearchCriteria criteria = new ExpenseSearchCriteria();
 	Pageable pageable = PageRequest.of(0, 20);
 
+	// Act
 	String csv = expenseService.exportExpensesToCsv(criteria, testUser, pageable);
 
+	// Assert
 	assertThat(csv).isNotNull();
 	assertThat(csv).contains("date,merchant,amount,bank,category");
 	assertThat(csv.split("\n")).hasSize(1); // Only header row
