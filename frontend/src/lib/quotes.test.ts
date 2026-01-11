@@ -15,33 +15,26 @@ describe('Quotes', () => {
         expect(quote.text, `Quote at index ${index} should have text`).toBeDefined();
         expect(quote.text, `Quote at index ${index} should have non-empty text`).not.toBe('');
         expect(quote.author, `Quote at index ${index} should have author`).toBeDefined();
-        expect(quote.author, `Quote at index ${index} should have non-empty author`).not.toBe(
-          ''
-        );
+        expect(quote.author, `Quote at index ${index} should have non-empty author`).not.toBe('');
       });
     });
 
     it('QUOTES_AllEntries_HaveStringFields', () => {
       // Act & Assert
       QUOTES.forEach((quote: Quote, index: number) => {
-        expect(
-          typeof quote.text,
-          `Quote text at index ${index} should be a string`
-        ).toBe('string');
-        expect(
-          typeof quote.author,
-          `Quote author at index ${index} should be a string`
-        ).toBe('string');
+        expect(typeof quote.text, `Quote text at index ${index} should be a string`).toBe('string');
+        expect(typeof quote.author, `Quote author at index ${index} should be a string`).toBe(
+          'string'
+        );
       });
     });
 
     it('QUOTES_AllEntries_AreTrimmed', () => {
       // Act & Assert
       QUOTES.forEach((quote: Quote, index: number) => {
-        expect(
-          quote.text,
-          `Quote text at index ${index} should not have leading whitespace`
-        ).toBe(quote.text.trim());
+        expect(quote.text, `Quote text at index ${index} should not have leading whitespace`).toBe(
+          quote.text.trim()
+        );
         expect(
           quote.author,
           `Quote author at index ${index} should not have trailing whitespace`
@@ -55,9 +48,7 @@ describe('Quotes', () => {
       const expectedAuthor = 'Benjamin Franklin';
 
       // Act
-      const found = QUOTES.find(
-        (q) => q.text === expectedQuote && q.author === expectedAuthor
-      );
+      const found = QUOTES.find((q) => q.text === expectedQuote && q.author === expectedAuthor);
 
       // Assert
       expect(found).toBeDefined();
@@ -65,13 +56,12 @@ describe('Quotes', () => {
 
     it('QUOTES_ContainsExpectedQuote_WarrenBuffett', () => {
       // Arrange
-      const expectedText = 'Do not save what is left after spending, but spend what is left after saving.';
+      const expectedText =
+        'Do not save what is left after spending, but spend what is left after saving.';
       const expectedAuthor = 'Warren Buffett';
 
       // Act
-      const found = QUOTES.find(
-        (q) => q.text === expectedText && q.author === expectedAuthor
-      );
+      const found = QUOTES.find((q) => q.text === expectedText && q.author === expectedAuthor);
 
       // Assert
       expect(found).toBeDefined();

@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import { renderHook, act } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { authApi } from '@/lib/api';
 import * as jwtUtils from '@/lib/jwt';
@@ -98,6 +98,7 @@ describe('AuthContext', () => {
       vi.mocked(jwtUtils.isValidToken).mockReturnValue(false); // Start unauthenticated
       vi.mocked(authApi.login).mockResolvedValue({
         data: { token: mockToken },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
       const { result } = renderHook(() => useAuth(), {
@@ -112,7 +113,7 @@ describe('AuthContext', () => {
 
       // Assert - wrap state checks in waitFor
       await waitFor(() => expect(result.current.isAuthenticated).toBe(true));
-      
+
       expect(authApi.login).toHaveBeenCalledWith(mockUsername, mockPassword);
       expect(result.current.username).toBe(mockUsername);
     });
@@ -146,11 +147,13 @@ describe('AuthContext', () => {
       const mockUsername = 'newuser';
       const mockPassword = 'password123';
       const mockEmail = 'newuser@example.com';
-      
+
       vi.mocked(jwtUtils.isValidToken).mockReturnValue(false); // Start unauthenticated
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(authApi.register).mockResolvedValue({ data: {} } as any);
       vi.mocked(authApi.login).mockResolvedValue({
         data: { token: mockToken },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
       const { result } = renderHook(() => useAuth(), {
@@ -162,7 +165,7 @@ describe('AuthContext', () => {
 
       // Assert
       await waitFor(() => expect(result.current.isAuthenticated).toBe(true));
-      
+
       expect(authApi.register).toHaveBeenCalledWith(mockUsername, mockPassword, mockEmail);
       expect(authApi.login).toHaveBeenCalledWith(mockUsername, mockPassword);
       expect(result.current.username).toBe(mockUsername);
@@ -196,8 +199,9 @@ describe('AuthContext', () => {
       const mockPassword = 'password123';
       const mockEmail = 'newuser@example.com';
       const mockError = new Error('Login failed');
-      
+
       vi.mocked(jwtUtils.isValidToken).mockReturnValue(false); // Start unauthenticated
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       vi.mocked(authApi.register).mockResolvedValue({ data: {} } as any);
       vi.mocked(authApi.login).mockRejectedValue(mockError);
 

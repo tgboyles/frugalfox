@@ -4,7 +4,6 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { AuthProvider } from '@/contexts/AuthContext';
 import * as jwtUtils from '@/lib/jwt';
-import { authApi } from '@/lib/api';
 
 // Mock the API module
 vi.mock('@/lib/api', () => ({
@@ -21,10 +20,7 @@ vi.mock('@/lib/jwt', () => ({
 }));
 
 // Helper component to wrap ProtectedRoute with router and auth context
-const renderWithRouter = (
-  ui: React.ReactElement,
-  { initialEntries = ['/protected'] } = {}
-) => {
+const renderWithRouter = (ui: React.ReactElement, { initialEntries = ['/protected'] } = {}) => {
   return render(
     <MemoryRouter initialEntries={initialEntries}>
       <AuthProvider>
@@ -151,12 +147,10 @@ describe('ProtectedRoute', () => {
       const mockUsername = 'testuser';
       localStorage.setItem('token', mockToken);
       localStorage.setItem('username', mockUsername);
-      
+
       // First call returns true (authenticated in context)
       // Second call in useEffect returns false (token expired)
-      vi.mocked(jwtUtils.isValidToken)
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(false);
+      vi.mocked(jwtUtils.isValidToken).mockReturnValueOnce(true).mockReturnValueOnce(false);
       vi.mocked(jwtUtils.getUsernameFromToken).mockReturnValue(mockUsername);
 
       // Act

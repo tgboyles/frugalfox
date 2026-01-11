@@ -19,9 +19,7 @@ describe('JWT Utilities', () => {
     it('decodeToken_TokenWithUrlSafeBase64_ReturnsPayload', () => {
       // Arrange
       const payload = { sub: 'user', iat: 1234567890, exp: 9999999999 };
-      const encodedPayload = btoa(JSON.stringify(payload))
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_');
+      const encodedPayload = btoa(JSON.stringify(payload)).replace(/\+/g, '-').replace(/\//g, '_');
       const token = `header.${encodedPayload}.signature`;
 
       // Act
