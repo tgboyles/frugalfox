@@ -50,6 +50,18 @@ services:
     networks:
       - frugalfox-network
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frugalfox-frontend
+    ports:
+      - "3000:4173"
+    depends_on:
+      - backend
+    networks:
+      - frugalfox-network
+
 volumes:
   postgres_data:
 

@@ -176,12 +176,7 @@ export default function DashboardHome() {
               No expense data available
             </div>
           ) : (
-            <ResponsiveContainer
-              width="100%"
-              height={300}
-              role="img"
-              aria-label="Pie chart showing spending distribution by category"
-            >
+            <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
                   data={categoryChartData}
@@ -215,12 +210,7 @@ export default function DashboardHome() {
               No bank data available
             </div>
           ) : (
-            <ResponsiveContainer
-              width="100%"
-              height={300}
-              role="img"
-              aria-label="Pie chart showing spending distribution by bank"
-            >
+            <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
                   data={bankChartData}
@@ -254,12 +244,7 @@ export default function DashboardHome() {
               No data available
             </div>
           ) : (
-            <ResponsiveContainer
-              width="100%"
-              height={300}
-              role="img"
-              aria-label="Pie chart showing income versus expenses"
-            >
+            <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
                   data={incomeExpenseChartData}
