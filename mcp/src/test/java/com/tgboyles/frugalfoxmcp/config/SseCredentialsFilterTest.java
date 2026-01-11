@@ -47,6 +47,8 @@ class SseCredentialsFilterTest {
     @Test
     void doFilter_SseEndpointWithCredentials_ExtractsAndStoresCredentials() throws IOException, ServletException {
         // Arrange
+        // Filter checks endsWith("/sse") so both "/sse" and "/mcp/sse" would match
+        // Using "/mcp/sse" as it's the realistic production endpoint path
         when(httpRequest.getRequestURI()).thenReturn("/mcp/sse");
         when(httpRequest.getHeader("X-Frugalfox-Username")).thenReturn("testuser");
         when(httpRequest.getHeader("X-Frugalfox-Password")).thenReturn("testpass");
@@ -105,6 +107,8 @@ class SseCredentialsFilterTest {
     @Test
     void doFilter_SseEndpointCaseSensitive_DoesNotMatch() throws IOException, ServletException {
         // Arrange
+        // Filter uses endsWith("/sse") which is case-sensitive
+        // "/mcp/SSE" won't match because it ends with "/SSE" not "/sse"
         when(httpRequest.getRequestURI()).thenReturn("/mcp/SSE");
 
         // Act
