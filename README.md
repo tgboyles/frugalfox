@@ -45,6 +45,10 @@ Frugal Fox is a demonstrative budgeting application that showcases:
 - SSE transport for web-based clients
 - Java 25
 
+**AI & LLM:**
+- Ollama (local LLM runtime)
+- Support for chat and LLM functionality
+
 **Infrastructure:**
 - Docker & Docker Compose for deployment
 - CORS configured for frontend-backend communication
@@ -64,12 +68,14 @@ This starts:
 - **Backend API** on port 8080: http://localhost:8080
 - **MCP Server** on port 8081: http://localhost:8081
 - **Frontend** on port 3000: http://localhost:3000
+- **Ollama LLM Server** on port 11434: http://localhost:11434
 
 Health checks:
 ```bash
 curl http://localhost:8080/actuator/health  # Backend API
 curl http://localhost:8081/actuator/health  # MCP Server
 curl http://localhost:3000                   # Frontend
+curl http://localhost:11434                  # Ollama API
 ```
 
 ### Frontend Development Server
