@@ -69,7 +69,7 @@ Health checks:
 ```bash
 curl http://localhost:8080/actuator/health  # Backend API
 curl http://localhost:8081/actuator/health  # MCP Server
-curl http://localhost:3000                   # Frontend (nginx)
+curl http://localhost:3000                   # Frontend
 ```
 
 ### Frontend Development Server

@@ -56,7 +56,7 @@ services:
       dockerfile: Dockerfile
     container_name: frugalfox-frontend
     ports:
-      - "3000:80"
+      - "3000:4173"
     depends_on:
       - backend
     networks:

@@ -73,12 +73,8 @@ docker compose up --build
 This starts the frontend on http://localhost:3000 along with the backend, database, and MCP server.
 
 The Docker setup uses:
-- **Multi-stage build** with Node.js for building and nginx for serving
-- **nginx** for production-grade static file serving with:
-  - SPA routing support (React Router)
-  - Gzip compression
-  - Optimized caching headers
-  - Security headers
+- **Single-stage build** with Node.js for building and serving
+- **Vite preview server** for serving the built application
 
 ### Testing
 
