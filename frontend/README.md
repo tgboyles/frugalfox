@@ -93,17 +93,84 @@ Run linter in watch mode:
 pnpm lint:watch
 ```
 
-**Accessibility Testing:**
+#### Accessibility Testing
 
-The project includes automated accessibility testing via ESLint and [eslint-plugin-jsx-a11y](https://github.com/jsx-eslint/eslint-plugin-jsx-a11y). This ensures compliance with web accessibility standards (WCAG) at build time and during development.
+The project includes automated accessibility testing via ESLint and [eslint-plugin-jsx-a11y](https://github.com/jsx-eslint/eslint-plugin-jsx-a11y). This ensures compliance with WCAG 2.1 Level A & AA standards at build time and during development.
 
-Accessibility checks include:
-- Proper ARIA attributes and roles
-- Keyboard navigation support
-- Alt text on images without redundant words
-- Semantic HTML usage
-- Interactive element accessibility
-- Click handlers paired with keyboard handlers
+**Configuration:**
+
+The accessibility plugin is configured in `eslint.config.js`:
+
+```javascript
+import jsxA11y from 'eslint-plugin-jsx-a11y'
+
+export default defineConfig([
+  {
+    extends: [
+      // ... other configs
+      jsxA11y.flatConfigs.recommended,
+    ],
+  },
+])
+```
+
+**Rules Enforced:**
+
+- **Interactive Elements**: Click handlers must have keyboard event handlers, proper roles, and be keyboard accessible (tabIndex)
+- **Images**: Must have alt text without redundant words like "image", "photo", "picture"
+- **ARIA**: Valid roles and attributes
+- **Semantic HTML**: Proper heading order, form controls with labels, iframe titles
+- **Keyboard Navigation**: Elements with onClick must have onKeyDown/onKeyUp, interactive elements must be focusable
+
+**Common Patterns:**
+
+Interactive element with keyboard support:
+```tsx
+<div
+  role="button"
+  tabIndex={0}
+  onClick={handleClick}
+  onKeyDown={(e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      handleClick()
+    }
+  }}
+>
+  Click me
+</div>
+```
+
+Form with proper labels:
+```tsx
+<form>
+  <label htmlFor="email">Email</label>
+  <input id="email" type="email" name="email" required />
+  
+  <label htmlFor="password">Password</label>
+  <input id="password" type="password" name="password" required />
+  
+  <button type="submit">Log In</button>
+</form>
+```
+
+**Manual Testing:**
+
+While ESLint catches many issues at build time, manual testing is still important:
+
+1. **Keyboard Navigation**: Test Tab/Shift+Tab navigation and Enter/Space activation
+2. **Screen Reader**: Test with NVDA, JAWS, or VoiceOver
+3. **Color Contrast**: Verify sufficient contrast with browser dev tools
+4. **Zoom**: Test at 200% zoom
+5. **Focus Indicators**: Verify visible focus indicators on interactive elements
+
+**Resources:**
+
+- [eslint-plugin-jsx-a11y Documentation](https://github.com/jsx-eslint/eslint-plugin-jsx-a11y)
+- [WCAG 2.1 Guidelines](https://www.w3.org/WAI/WCAG21/quickref/)
+- [MDN Accessibility Guide](https://developer.mozilla.org/en-US/docs/Web/Accessibility)
+- [WebAIM](https://webaim.org/)
+- [a11y Project](https://www.a11yproject.com/)
 
 ## Project Architecture
 

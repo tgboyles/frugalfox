@@ -147,8 +147,7 @@ frugal_fox/
 Detailed documentation for each component:
 
 - **[Backend](backend/README.md)** - How to build, test, and extend the Spring Boot API
-- **[Frontend](frontend/README.md)** - React app architecture and development guide
-  - **[Accessibility Testing](frontend/ACCESSIBILITY.md)** - WCAG compliance and testing guide
+- **[Frontend](frontend/README.md)** - React app architecture, development guide, and accessibility testing
 - **[MCP Server](mcp/README.md)** - AI assistant integration (documented below)
 - **[CLAUDE.md](CLAUDE.md)** - AI coding assistant integration guide
 
