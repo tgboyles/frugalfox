@@ -1,5 +1,8 @@
 name: Frontend Lint, Format & Test
 
+permissions:
+  contents: read
+
 on:
   pull_request:
     paths:
