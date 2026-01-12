@@ -140,13 +140,14 @@ frugal_fox/
 - **API-First**: RESTful endpoints with comprehensive OpenAPI support
 - **Type Safety**: TypeScript frontend, strong Java typing
 - **Test Coverage**: Unit and integration tests for all layers
+- **Accessibility**: Automated WCAG compliance testing with ESLint
 
 ## Component Documentation
 
 Detailed documentation for each component:
 
 - **[Backend](backend/README.md)** - How to build, test, and extend the Spring Boot API
-- **[Frontend](frontend/README.md)** - React app architecture and development guide
+- **[Frontend](frontend/README.md)** - React app architecture, development guide, and accessibility testing
 - **[MCP Server](mcp/README.md)** - AI assistant integration (documented below)
 - **[CLAUDE.md](CLAUDE.md)** - AI coding assistant integration guide
 
