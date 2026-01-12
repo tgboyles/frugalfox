@@ -1,14 +1,20 @@
-name: Frontend Lint & Format
+name: Frontend Lint, Format & Test
 
 on:
   pull_request:
     paths:
       - 'frontend/**'
       - '.github/workflows/frontend-lint.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-lint.yml'
 
 jobs:
-  lint-and-format:
-    name: ESLint & Prettier Checks
+  lint-format-and-test:
+    name: ESLint, Prettier & Unit Tests
     runs-on: ubuntu-latest
     
     defaults:
@@ -51,3 +57,6 @@ jobs:
       
       - name: Run Prettier format check
         run: pnpm format:check
+      
+      - name: Run unit tests
+        run: pnpm test run
