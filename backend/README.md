@@ -76,14 +76,26 @@ Build artifacts are created in `target/` directory.
 ### Running Tests
 
 ```bash
-# Run all tests
+# Run unit tests only
 mvn test
+
+# Run unit tests + integration tests
+mvn verify
 
 # Run specific test class
 mvn test -Dtest=ExpenseControllerTest
 
 # Run specific test method
 mvn test -Dtest=ExpenseServiceTest#shouldFilterExpensesByCategory
+
+# Run specific integration test
+mvn verify -Dit.test=AuthenticationIT
+
+# Skip all tests
+mvn clean package -DskipTests
+
+# Skip integration tests only
+mvn clean package -DskipITs
 ```
 
 ### Test Configuration
@@ -94,8 +106,41 @@ Tests use:
 - **Test profile** with configuration in `src/test/resources/application.properties`
 
 The test suite includes:
-- **Unit tests**: Service layer with Mockito (e.g., `ExpenseServiceTest`)
-- **Integration tests**: Controller tests with `@SpringBootTest` + MockMvc (e.g., `ExpenseControllerTest`)
+- **Unit tests**: Service layer with Mockito (e.g., `ExpenseServiceTest`) - named `*Test.java`
+- **Integration tests (MockMvc)**: Controller tests with `@SpringBootTest` + MockMvc (e.g., `ExpenseControllerTest`) - named `*Test.java`
+- **Integration tests (REST Assured)**: Full API tests with REST Assured (e.g., `AuthenticationIT`) - named `*IT.java`
+
+#### Integration Tests with REST Assured
+
+The `/src/test/java/com/tgboyles/frugalfox/integration/` directory contains comprehensive REST Assured integration tests that validate the API from an end-to-end perspective.
+
+**What they test:**
+- User authentication (registration and login)
+- Expense CRUD operations
+- Advanced search and filtering
+- CSV import and export functionality
+- User data isolation
+- Error handling and validation
+
+**Key features:**
+- Tests start their own Spring Boot application instance (no external server needed)
+- Each test gets a clean H2 database
+- Tests generate unique test data to avoid conflicts
+- All major API endpoints are covered
+
+**Running integration tests:**
+```bash
+# Run all integration tests
+mvn verify
+
+# Run specific integration test class
+mvn verify -Dit.test=ExpenseCrudIT
+
+# Run in Docker (if Java 23 not available locally)
+docker run --rm -v "$(pwd)":/app -w /app maven:3.9-eclipse-temurin-23 mvn verify
+```
+
+**Learn more:** See [Integration Tests README](src/test/java/com/tgboyles/frugalfox/integration/README.md) for detailed documentation.
 
 ## Project Architecture
 

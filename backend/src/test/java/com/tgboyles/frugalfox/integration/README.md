@@ -19,13 +19,40 @@ The integration tests validate the API from an end-to-end perspective, testing:
 - **Spring Boot Test**: Integration with Spring Boot application
 - **H2 Database**: In-memory database for testing
 
-## Running Integration Tests
+## Test Execution Modes
 
-Integration tests are separate from unit tests and can be run independently.
+The integration tests support two execution modes:
+
+### Mode 1: Embedded Server (Default)
+
+Tests start their own Spring Boot application instance with an H2 database. This is the default mode and doesn't require any external services.
+
+**Prerequisites:**
+- Java 23 (required to compile the main application code)
+- Maven
+
+**Run Integration Tests:**
+
+```bash
+# From the backend directory
+mvn verify
+
+# Or run integration tests explicitly
+mvn failsafe:integration-test failsafe:verify
+```
+
+### Mode 2: External Server (Staging/Production)
+
+Tests can also run against an external running server (e.g., in Docker, staging environment).
+
+**Note:** This mode requires modifying `BaseIntegrationTest` to disable `@SpringBootTest` auto-start and connect to an external URL. This is intentionally not the default to keep tests self-contained.
+
+## Running Integration Tests
 
 ### Prerequisites
 
-The tests use `@SpringBootTest` with `RANDOM_PORT`, which starts the Spring Boot application automatically. No manual server startup is required.
+- Java 23
+- Maven 3.6+
 
 ### Run Integration Tests Only
 
@@ -33,7 +60,10 @@ The tests use `@SpringBootTest` with `RANDOM_PORT`, which starts the Spring Boot
 # From the backend directory
 mvn verify
 
-# Or run integration tests explicitly
+# Skip unit tests, run only integration tests
+mvn verify -DskipTests
+
+# Run integration tests explicitly
 mvn failsafe:integration-test
 ```
 
@@ -58,6 +88,18 @@ mvn verify -Dit.test=CsvImportExportIT
 mvn clean package -DskipITs
 ```
 
+## Using Docker for Testing
+
+If you don't have Java 23 installed locally, you can use Docker:
+
+```bash
+# Build and run tests in Docker container
+docker run --rm -v "$(pwd)":/app -w /app maven:3.9-eclipse-temurin-23 mvn verify
+
+# Or use the backend Dockerfile to build the project (includes running tests)
+cd .. && docker compose build backend
+```
+
 ## Test Structure
 
 ### Base Classes
@@ -67,6 +109,7 @@ mvn clean package -DskipITs
   - REST Assured setup and configuration
   - Data cleanup before each test
   - Utility methods for authentication and test data creation
+  - Uses `@ActiveProfiles("test")` to load test-specific configuration
 
 ### Test Classes
 
@@ -142,12 +185,51 @@ given()
 
 These tests are designed to run in:
 - Local development environments
-- CI/CD pipelines
+- CI/CD pipelines (GitHub Actions, Jenkins, etc.)
+- Docker containers
 - Staging environments
 
 The tests are self-contained and handle their own data setup/teardown, making them suitable for automated execution.
 
+### GitHub Actions Example
+
+```yaml
+name: Integration Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK 23
+        uses: actions/setup-java@v3
+        with:
+          java-version: '23'
+          distribution: 'temurin'
+      - name: Run integration tests
+        run: |
+          cd backend
+          mvn verify
+```
+
 ## Troubleshooting
+
+### Java Version Mismatch
+
+**Error:** `release version 23 not supported`
+
+**Solution:** Ensure Java 23 is installed and configured:
+```bash
+java -version  # Should show Java 23
+export JAVA_HOME=/path/to/java23  # If needed
+```
+
+Or use Docker:
+```bash
+docker run --rm -v "$(pwd)":/app -w /app maven:3.9-eclipse-temurin-23 mvn verify
+```
 
 ### Port Already in Use
 
@@ -158,14 +240,13 @@ If you see port conflicts, the tests use `RANDOM_PORT` mode to avoid conflicts. 
 - Check logs for detailed error messages
 - REST Assured enables logging of failed requests automatically
 - Ensure the database is clean before running tests (handled by `@BeforeEach`)
+- Verify test application.properties is correctly configured
 
-### Running Against a Real Server
+### Database Issues
 
-The tests are configured to start their own embedded server. If you need to run against an external server:
-
-1. Modify `BaseIntegrationTest` to use `DEFINED_PORT` instead of `RANDOM_PORT`
-2. Set the server URL manually in the `setUp()` method
-3. Ensure the external server is running and accessible
+The tests use H2 in-memory database with PostgreSQL compatibility mode. If you see Flyway migration errors, ensure:
+- Migrations are compatible with both PostgreSQL and H2
+- `MODE=PostgreSQL` is set in the H2 connection URL (already configured in test application.properties)
 
 ## Best Practices
 
@@ -175,3 +256,26 @@ The tests are configured to start their own embedded server. If you need to run 
 - Tests verify both positive and negative scenarios
 - Tests check user isolation to ensure security
 - Tests use descriptive names that explain what is being tested
+- Integration test files end with `IT.java` (e.g., `AuthenticationIT.java`)
+
+## Comparison with Unit Tests
+
+| Aspect | Unit Tests | Integration Tests |
+|--------|-----------|------------------|
+| File naming | `*Test.java` | `*IT.java` |
+| Maven phase | `test` | `integration-test` |
+| Scope | Single class/method | Full API endpoint |
+| Database | Mocked | Real H2 database |
+| Spring Context | Partial or mocked | Full application context |
+| Execution time | Fast (milliseconds) | Slower (seconds) |
+| Purpose | Verify logic | Verify integration |
+
+## Future Enhancements
+
+Potential improvements for integration tests:
+
+1. **Performance Tests**: Add load testing with multiple concurrent users
+2. **Contract Tests**: Add Pact or Spring Cloud Contract tests
+3. **External Server Mode**: Add configuration to test against external servers
+4. **Test Data Builders**: Create fluent builders for complex test data
+5. **Parallel Execution**: Configure tests to run in parallel for faster feedback
