@@ -78,6 +78,54 @@ The Docker setup uses:
 
 ### Testing
 
+#### Unit Tests
+
+Run unit tests with Vitest:
+```bash
+pnpm test
+```
+
+Run tests with UI:
+```bash
+pnpm test:ui
+```
+
+Run tests with coverage:
+```bash
+pnpm test:coverage
+```
+
+#### Integration Tests (E2E)
+
+Run end-to-end integration tests with Playwright:
+```bash
+pnpm test:e2e
+```
+
+Run E2E tests with UI (interactive mode):
+```bash
+pnpm test:e2e:ui
+```
+
+Run E2E tests in headed mode (see browser):
+```bash
+pnpm test:e2e:headed
+```
+
+Run E2E tests in debug mode:
+```bash
+pnpm test:e2e:debug
+```
+
+**Prerequisites for E2E tests:**
+- Backend API running on http://localhost:8080
+- Frontend running on http://localhost:5173 (or set PLAYWRIGHT_BASE_URL)
+- PostgreSQL database accessible to the backend
+
+See [e2e/README.md](e2e/README.md) for detailed documentation on integration tests.
+
+#### Type Checking and Linting
+
 Run TypeScript type checking:
 ```bash
 pnpm build
