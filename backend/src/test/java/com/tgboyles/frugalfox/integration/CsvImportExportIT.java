@@ -3,7 +3,6 @@ package com.tgboyles.frugalfox.integration;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.greaterThan;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -39,8 +38,8 @@ public class CsvImportExportIT extends BaseIntegrationTest {
 			.then()
 			.statusCode(200)
 			.body("totalRows", equalTo(3))
-			.body("successfulRows", equalTo(3))
-			.body("failedRows", equalTo(0));
+			.body("successfulImports", equalTo(3))
+			.body("failedImports", equalTo(0));
 
 		// Verify expenses were created
 		given()
@@ -73,8 +72,8 @@ public class CsvImportExportIT extends BaseIntegrationTest {
 			.then()
 			.statusCode(200)
 			.body("totalRows", equalTo(3))
-			.body("successfulRows", equalTo(2))
-			.body("failedRows", equalTo(1));
+			.body("successfulImports", equalTo(2))
+			.body("failedImports", equalTo(1));
 
 		csvFile.delete();
 	}
@@ -108,7 +107,7 @@ public class CsvImportExportIT extends BaseIntegrationTest {
 			.when()
 			.post("/expenses/import")
 			.then()
-			.statusCode(401); // Unauthorized
+			.statusCode(403); // Forbidden - Spring Security default for unauthenticated requests
 
 		csvFile.delete();
 	}
@@ -201,8 +200,9 @@ public class CsvImportExportIT extends BaseIntegrationTest {
 			.extract()
 			.asString();
 
-		// Should only contain headers
-		assert csvContent.equals("date,merchant,amount,bank,category\n");
+		// Should only contain headers (CSVFormat.DEFAULT uses CRLF line endings)
+		assert csvContent.equals("date,merchant,amount,bank,category\r\n")
+			: "Expected 'date,merchant,amount,bank,category\\r\\n' but got: '" + csvContent.replace("\r", "\\r").replace("\n", "\\n") + "'";
 	}
 
 	@Test
@@ -211,7 +211,7 @@ public class CsvImportExportIT extends BaseIntegrationTest {
 			.when()
 			.get("/expenses/export")
 			.then()
-			.statusCode(401); // Unauthorized
+			.statusCode(403); // Forbidden - Spring Security default for unauthenticated requests
 	}
 
 	@Test

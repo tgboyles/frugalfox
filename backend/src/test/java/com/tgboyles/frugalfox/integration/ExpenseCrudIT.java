@@ -49,7 +49,7 @@ public class ExpenseCrudIT extends BaseIntegrationTest {
 			.when()
 			.post("/expenses")
 			.then()
-			.statusCode(401); // Unauthorized
+			.statusCode(403); // Forbidden - Spring Security default for unauthenticated requests
 	}
 
 	@Test
@@ -77,7 +77,7 @@ public class ExpenseCrudIT extends BaseIntegrationTest {
 
 		// Create expense
 		String expenseJson = createExpenseJson("2025-12-26", "Whole Foods", "125.50", "Chase", "Groceries");
-		Response createResponse = given()
+		int expenseId = given()
 			.header("Authorization", "Bearer " + token)
 			.contentType(ContentType.JSON)
 			.body(expenseJson)
@@ -86,9 +86,7 @@ public class ExpenseCrudIT extends BaseIntegrationTest {
 			.then()
 			.statusCode(201)
 			.extract()
-			.response();
-
-		Long expenseId = createResponse.jsonPath().getLong("id");
+			.path("id");
 
 		// Get expense by ID
 		given()
@@ -97,7 +95,7 @@ public class ExpenseCrudIT extends BaseIntegrationTest {
 			.get("/expenses/" + expenseId)
 			.then()
 			.statusCode(200)
-			.body("id", equalTo(expenseId.intValue()))
+			.body("id", equalTo(expenseId))
 			.body("merchant", equalTo("Whole Foods"));
 	}
 
