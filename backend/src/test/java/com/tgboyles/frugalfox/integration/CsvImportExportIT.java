@@ -257,7 +257,8 @@ public class CsvImportExportIT extends BaseIntegrationTest {
 	 * Helper method to create a temporary CSV file for testing.
 	 */
 	private File createCsvFile(String filename, String content) throws IOException {
-		File csvFile = new File("/tmp/" + filename);
+		File tmpDir = new File(System.getProperty("java.io.tmpdir"));
+		File csvFile = new File(tmpDir, filename);
 		try (FileWriter writer = new FileWriter(csvFile)) {
 			writer.write(content);
 		}
