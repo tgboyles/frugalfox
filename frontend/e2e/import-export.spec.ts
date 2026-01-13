@@ -14,11 +14,19 @@ test.describe('CSV Import/Export', () => {
     page,
     authenticatedUser,
   }) => {
-    // Create a temporary CSV file
+    // Create a temporary CSV file with dynamic dates
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const twoDaysAgo = new Date(today);
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    
+    const formatDate = (date: Date) => date.toISOString().split('T')[0];
+    
     const csvContent = `amount,category,merchant,date,bank
-25.50,Food,Starbucks,2024-01-15,Chase
-150.00,Shopping,Amazon,2024-01-14,Wells Fargo
-45.75,Transport,Shell,2024-01-13,Chase`;
+25.50,Food,Starbucks,${formatDate(yesterday)},Chase
+150.00,Shopping,Amazon,${formatDate(twoDaysAgo)},Wells Fargo
+45.75,Transport,Shell,${formatDate(today)},Chase`;
 
     const tempDir = tmpdir();
     const csvFilePath = join(tempDir, `test-expenses-${Date.now()}.csv`);
@@ -44,15 +52,15 @@ test.describe('CSV Import/Export', () => {
         await fileInput.setInputFiles(csvFilePath);
       }
 
-      // Wait for import to complete
-      await page.waitForTimeout(2000);
+      // Wait for import to complete using explicit wait
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
 
       // Should show success message
       await expect(
         page.locator('text=/imported|success|uploaded/i, [role="alert"]')
       ).toBeVisible({ timeout: 5000 }).catch(() => {
         // Import might auto-refresh the page
-        return page.waitForTimeout(1000);
+        return page.waitForLoadState('load');
       });
 
       // Verify imported expenses appear in the list
@@ -147,7 +155,7 @@ not,a,valid,expense`;
 
     if (await categoryFilter.count() > 0) {
       await categoryFilter.selectOption('Food').catch(() => {});
-      await page.waitForTimeout(500);
+      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
 
       // Export filtered results
       const exportButton = page.locator('button:has-text("Export")');
@@ -167,8 +175,12 @@ not,a,valid,expense`;
   test('should handle large CSV import', async ({ page, authenticatedUser }) => {
     // Create a CSV with many rows (but within limit)
     const rows = ['amount,category,merchant,date,bank'];
+    const today = new Date();
     for (let i = 1; i <= 100; i++) {
-      rows.push(`${10 + i},Food,Store ${i},2024-01-${String(i % 28 + 1).padStart(2, '0')},Chase`);
+      const date = new Date(today);
+      date.setDate(date.getDate() - (i % 28));
+      const formatDate = (d: Date) => d.toISOString().split('T')[0];
+      rows.push(`${10 + i},Food,Store ${i},${formatDate(date)},Chase`);
     }
     const csvContent = rows.join('\n');
 
@@ -183,15 +195,15 @@ not,a,valid,expense`;
     if (await importButton.count() > 0) {
       await importButton.setInputFiles(csvFilePath);
 
-      // Wait for import to complete (might take longer)
-      await page.waitForTimeout(3000);
+      // Wait for import to complete (might take longer) - use networkidle
+      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
 
       // Should show success or import in progress
       await expect(
         page.locator('text=/imported|success|processing/i, [role="alert"]')
       ).toBeVisible({ timeout: 10000 }).catch(() => {
         // Import might auto-refresh
-        return page.waitForTimeout(1000);
+        return page.waitForLoadState('load');
       });
     }
   });

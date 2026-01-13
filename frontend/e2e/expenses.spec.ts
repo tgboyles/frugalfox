@@ -57,7 +57,7 @@ test.describe('Expenses Page', () => {
       await categoryFilter.selectOption('Food').catch(() => categoryFilter.fill('Food'));
 
       // Wait for filtered results
-      await page.waitForTimeout(500);
+      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
 
       // Should only show Food category expenses
       await expect(page.locator('text=Restaurant')).toBeVisible();
@@ -90,7 +90,7 @@ test.describe('Expenses Page', () => {
       await searchInput.fill('Coffee');
 
       // Wait for search results
-      await page.waitForTimeout(500);
+      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
 
       // Should show matching expense
       await expect(page.locator('text=Unique Coffee Shop')).toBeVisible();
@@ -129,8 +129,8 @@ test.describe('Expenses Page', () => {
         // No confirmation dialog
       });
 
-    // Wait for deletion
-    await page.waitForTimeout(1000);
+    // Wait for deletion to complete
+    await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
 
     // Expense should no longer be visible
     await expect(page.locator(`text=${expense.merchant}`)).not.toBeVisible();
@@ -155,7 +155,7 @@ test.describe('Expenses Page', () => {
       await nextButton.first().click();
 
       // Should navigate to page 2
-      await page.waitForTimeout(500);
+      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
       
       // URL might have page parameter or page indicator should change
       const pageIndicator = page.locator('text=/page 2|2 of/i');
@@ -193,7 +193,7 @@ test.describe('Expenses Page', () => {
 
     if (await amountHeader.count() > 0) {
       await amountHeader.click();
-      await page.waitForTimeout(500);
+      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
 
       // Check if expenses are sorted (implementation-specific)
       // This is a basic check - adjust based on your UI

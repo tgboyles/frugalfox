@@ -102,8 +102,8 @@ test.describe('Add Expense', () => {
 
     await page.click('button[type="submit"]');
 
-    // Wait for success indication
-    await page.waitForTimeout(1000);
+    // Wait for form submission to complete
+    await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
 
     // Check if still on add expense page
     if (page.url().includes('add-expense')) {
