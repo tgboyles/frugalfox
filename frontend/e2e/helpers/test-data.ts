@@ -4,6 +4,7 @@
  */
 
 import { APIRequestContext } from '@playwright/test';
+import crypto from 'crypto';
 
 export interface TestUser {
   username: string;
@@ -28,7 +29,7 @@ const API_BASE_URL = process.env.VITE_API_BASE_URL || 'http://localhost:8080';
  */
 export function generateTestUsername(): string {
   const timestamp = Date.now();
-  const random = Math.random().toString(36).substring(2, 8);
+  const random = crypto.randomBytes(4).toString('hex').substring(0, 6);
   return `testuser_${timestamp}_${random}`;
 }
 
