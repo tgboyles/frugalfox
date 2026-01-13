@@ -1,174 +1,213 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.1</version>
-		<relativePath/> <!-- lookup parent from repository -->
-	</parent>
-	<groupId>com.tgboyles</groupId>
-	<artifactId>frugalfox</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<packaging>war</packaging>
-	<name>frugalfox</name>
-	<description>Demo project for Spring Boot</description>
-	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
-		<developer/>
-	</developers>
-	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
-	</scm>
-	<properties>
-		<java.version>23</java.version>
-	</properties>
-	<dependencies>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-validation</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-flyway</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webmvc</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-api</artifactId>
-			<version>0.12.6</version>
-		</dependency>
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-impl</artifactId>
-			<version>0.12.6</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-jackson</artifactId>
-			<version>0.12.6</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.datatype</groupId>
-			<artifactId>jackson-datatype-jsr310</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-csv</artifactId>
-			<version>1.11.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.flywaydb</groupId>
-			<artifactId>flyway-database-postgresql</artifactId>
-		</dependency>
+xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<modelVersion>4.0.0</modelVersion>
+<parent>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-starter-parent</artifactId>
+<version>4.0.1</version>
+<relativePath/> <!-- lookup parent from repository -->
+</parent>
+<groupId>com.tgboyles</groupId>
+<artifactId>frugalfox</artifactId>
+<version>0.0.1-SNAPSHOT</version>
+<packaging>war</packaging>
+<name>frugalfox</name>
+<description>Demo project for Spring Boot</description>
+<url/>
+<licenses>
+<license/>
+</licenses>
+<developers>
+<developer/>
+</developers>
+<scm>
+<connection/>
+<developerConnection/>
+<tag/>
+<url/>
+</scm>
+<properties>
+<java.version>23</java.version>
+</properties>
+<dependencies>
+<dependency>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-starter-data-jpa</artifactId>
+</dependency>
+<dependency>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-starter-validation</artifactId>
+</dependency>
+<dependency>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+<dependency>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-starter-flyway</artifactId>
+</dependency>
+<dependency>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-starter-webmvc</artifactId>
+</dependency>
+<dependency>
+<groupId>io.jsonwebtoken</groupId>
+<artifactId>jjwt-api</artifactId>
+<version>0.12.6</version>
+</dependency>
+<dependency>
+<groupId>io.jsonwebtoken</groupId>
+<artifactId>jjwt-impl</artifactId>
+<version>0.12.6</version>
+<scope>runtime</scope>
+</dependency>
+<dependency>
+<groupId>io.jsonwebtoken</groupId>
+<artifactId>jjwt-jackson</artifactId>
+<version>0.12.6</version>
+<scope>runtime</scope>
+</dependency>
+<dependency>
+<groupId>com.fasterxml.jackson.datatype</groupId>
+<artifactId>jackson-datatype-jsr310</artifactId>
+</dependency>
+<dependency>
+<groupId>org.apache.commons</groupId>
+<artifactId>commons-csv</artifactId>
+<version>1.11.0</version>
+</dependency>
+<dependency>
+<groupId>org.flywaydb</groupId>
+<artifactId>flyway-database-postgresql</artifactId>
+</dependency>
 
-		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-tomcat</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-flyway-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webmvc-test</artifactId>
-			<scope>test</scope>
-		</dependency>
+<dependency>
+<groupId>org.postgresql</groupId>
+<artifactId>postgresql</artifactId>
+<scope>runtime</scope>
+</dependency>
+<dependency>
+<groupId>com.h2database</groupId>
+<artifactId>h2</artifactId>
+<scope>test</scope>
+</dependency>
+<dependency>
+<groupId>org.springframework.security</groupId>
+<artifactId>spring-security-test</artifactId>
+<scope>test</scope>
+</dependency>
+<dependency>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-starter-tomcat</artifactId>
+<scope>provided</scope>
+</dependency>
+<dependency>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-starter-flyway-test</artifactId>
+<scope>test</scope>
+</dependency>
+<dependency>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-starter-webmvc-test</artifactId>
+<scope>test</scope>
+</dependency>
 
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
+<dependency>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-starter-test</artifactId>
+<scope>test</scope>
+</dependency>
 
 
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
-		</dependency>
+<dependency>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
 
-	</dependencies>
+<!-- REST Assured for integration tests -->
+<dependency>
+<groupId>io.rest-assured</groupId>
+<artifactId>rest-assured</artifactId>
+<version>5.5.0</version>
+<scope>test</scope>
+</dependency>
+<dependency>
+<groupId>io.rest-assured</groupId>
+<artifactId>json-path</artifactId>
+<version>5.5.0</version>
+<scope>test</scope>
+</dependency>
+<dependency>
+<groupId>io.rest-assured</groupId>
+<artifactId>json-schema-validator</artifactId>
+<version>5.5.0</version>
+<scope>test</scope>
+</dependency>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>com.diffplug.spotless</groupId>
-				<artifactId>spotless-maven-plugin</artifactId>
-				<version>2.43.0</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>apply</goal>
-						</goals>
-						<phase>test</phase>
-					</execution>
-				</executions>
-				<configuration>
-					<java>
-						<!-- Simple formatting without external formatters for Java 23 compatibility -->
-						<!-- Remove unused imports -->
-						<removeUnusedImports/>
+</dependencies>
 
-						<!-- Consistent import ordering -->
-						<importOrder>
-							<order>java,javax,org,com,</order>
-						</importOrder>
+<build>
+<plugins>
+<plugin>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-maven-plugin</artifactId>
+</plugin>
+<plugin>
+<groupId>com.diffplug.spotless</groupId>
+<artifactId>spotless-maven-plugin</artifactId>
+<version>2.43.0</version>
+<executions>
+<execution>
+<goals>
+<goal>apply</goal>
+</goals>
+<phase>test</phase>
+</execution>
+</executions>
+<configuration>
+<java>
+<!-- Simple formatting without external formatters for Java 23 compatibility -->
+<!-- Remove unused imports -->
+<removeUnusedImports/>
 
-						<!-- Clean up trailing whitespace and ensure newline at end -->
-						<trimTrailingWhitespace/>
-						<endWithNewline/>
+<!-- Consistent import ordering -->
+<importOrder>
+<order>java,javax,org,com,</order>
+</importOrder>
 
-						<!-- Use regex-based indentation normalization -->
-						<indent>
-							<tabs>true</tabs>
-							<spacesPerTab>4</spacesPerTab>
-						</indent>
-					</java>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+<!-- Clean up trailing whitespace and ensure newline at end -->
+<trimTrailingWhitespace/>
+<endWithNewline/>
+
+<!-- Use regex-based indentation normalization -->
+<indent>
+<tabs>true</tabs>
+<spacesPerTab>4</spacesPerTab>
+</indent>
+</java>
+</configuration>
+</plugin>
+<!-- Maven Failsafe Plugin for integration tests -->
+<plugin>
+<groupId>org.apache.maven.plugins</groupId>
+<artifactId>maven-failsafe-plugin</artifactId>
+<executions>
+<execution>
+<goals>
+<goal>integration-test</goal>
+<goal>verify</goal>
+</goals>
+</execution>
+</executions>
+<configuration>
+<!-- Integration tests are named *IT.java -->
+<includes>
+<include>**/*IT.java</include>
+</includes>
+</configuration>
+</plugin>
+</plugins>
+</build>
 
 </project>
