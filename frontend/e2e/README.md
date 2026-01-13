@@ -134,25 +134,73 @@ These tests are designed to run in CI/CD pipelines:
 
 ### Example GitHub Actions
 
+Example workflow for running E2E tests in GitHub Actions:
+
 ```yaml
-- name: Start services
-  run: docker compose up -d postgres backend
+name: E2E Tests
 
-- name: Wait for backend
-  run: |
-    timeout 60 bash -c 'until curl -f http://localhost:8080/actuator/health; do sleep 2; done'
+on:
+  pull_request:
+  push:
+    branches: [main]
 
-- name: Install dependencies
-  run: |
-    cd frontend
-    pnpm install
-    pnpm exec playwright install chromium
-
-- name: Run E2E tests
-  run: |
-    cd frontend
-    pnpm test:e2e
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Install pnpm
+        run: npm install -g pnpm
+      
+      - name: Start services
+        run: docker compose up -d postgres backend
+      
+      - name: Wait for backend to be healthy
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:8080/actuator/health; do sleep 2; done'
+      
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: pnpm install
+      
+      - name: Install Playwright browsers
+        working-directory: ./frontend
+        run: pnpm exec playwright install chromium
+      
+      - name: Start frontend dev server
+        working-directory: ./frontend
+        run: |
+          pnpm dev &
+          timeout 60 bash -c 'until curl -f http://localhost:5173; do sleep 2; done'
+      
+      - name: Run E2E tests
+        working-directory: ./frontend
+        run: pnpm test:e2e
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 30
+      
+      - name: Stop services
+        if: always()
+        run: docker compose down
 ```
+
+For production deployment testing, modify the workflow to:
+1. Build the frontend: `pnpm build`
+2. Start production server: `pnpm preview`
+3. Set `PLAYWRIGHT_BASE_URL=http://localhost:4173`
 
 ## Debugging Failed Tests
 
