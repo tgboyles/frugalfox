@@ -9,12 +9,12 @@ test.describe('Settings Page', () => {
   test('should display user information', async ({ page, authenticatedUser }) => {
     await page.goto('/dashboard/settings');
 
-    // Should display username or email
-    const usernameLocator = page.locator(`text=${authenticatedUser.username}`);
-    const emailLocator = page.locator(`text=${authenticatedUser.email}`);
+    // Should display username or email - check if either is visible
+    const usernameVisible = await page.locator(`text=${authenticatedUser.username}`).isVisible().catch(() => false);
+    const emailVisible = await page.locator(`text=${authenticatedUser.email}`).isVisible().catch(() => false);
     
     // At least one should be visible
-    await expect(usernameLocator.or(emailLocator)).toBeVisible({ timeout: 5000 });
+    expect(usernameVisible || emailVisible).toBeTruthy();
   });
 
   test('should update email address', async ({ page, authenticatedUser }) => {

@@ -52,14 +52,16 @@ test.describe('CSV Import/Export', () => {
         await fileInput.setInputFiles(csvFilePath);
       }
 
-      // Wait for import to complete using explicit wait
-      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+      // Wait for import to complete using explicit wait (may timeout if page reloads)
+      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {
+        // Intentionally ignored - page might reload before networkidle is reached
+      });
 
       // Should show success message
       await expect(
         page.locator('text=/imported|success|uploaded/i, [role="alert"]')
       ).toBeVisible({ timeout: 5000 }).catch(() => {
-        // Import might auto-refresh the page
+        // Import might auto-refresh the page, wait for page load instead
         return page.waitForLoadState('load');
       });
 
@@ -154,13 +156,17 @@ not,a,valid,expense`;
     ).first();
 
     if (await categoryFilter.count() > 0) {
+      // May fail if element doesn't support select - intentionally ignored
       await categoryFilter.selectOption('Food').catch(() => {});
-      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
+      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {
+        // Intentionally ignored - may timeout if filtering is instant
+      });
 
       // Export filtered results
       const exportButton = page.locator('button:has-text("Export")');
       
       if (await exportButton.count() > 0) {
+        // Export may not trigger if feature is disabled/missing - returns null in that case
         const downloadPromise = page.waitForEvent('download', { timeout: 5000 }).catch(() => null);
         await exportButton.click();
 
@@ -196,7 +202,9 @@ not,a,valid,expense`;
       await importButton.setInputFiles(csvFilePath);
 
       // Wait for import to complete (might take longer) - use networkidle
-      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+        // Intentionally ignored - page might reload before networkidle
+      });
 
       // Should show success or import in progress
       await expect(

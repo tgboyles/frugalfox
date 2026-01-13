@@ -56,8 +56,10 @@ test.describe('Expenses Page', () => {
     if (await categoryFilter.count() > 0) {
       await categoryFilter.selectOption('Food').catch(() => categoryFilter.fill('Food'));
 
-      // Wait for filtered results
-      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
+      // Wait for filtered results (may timeout if filtering is instant)
+      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {
+        // Intentionally ignored - filtering might be synchronous
+      });
 
       // Should only show Food category expenses
       await expect(page.locator('text=Restaurant')).toBeVisible();
@@ -89,8 +91,10 @@ test.describe('Expenses Page', () => {
     if (await searchInput.count() > 0) {
       await searchInput.fill('Coffee');
 
-      // Wait for search results
-      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
+      // Wait for search results (may timeout if search is synchronous)
+      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {
+        // Intentionally ignored - search might be instant
+      });
 
       // Should show matching expense
       await expect(page.locator('text=Unique Coffee Shop')).toBeVisible();
@@ -129,8 +133,10 @@ test.describe('Expenses Page', () => {
         // No confirmation dialog
       });
 
-    // Wait for deletion to complete
-    await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
+    // Wait for deletion to complete (may timeout if deletion is instant)
+    await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {
+      // Intentionally ignored - deletion might be synchronous
+    });
 
     // Expense should no longer be visible
     await expect(page.locator(`text=${expense.merchant}`)).not.toBeVisible();
@@ -154,8 +160,10 @@ test.describe('Expenses Page', () => {
     if (await nextButton.count() > 0) {
       await nextButton.first().click();
 
-      // Should navigate to page 2
-      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
+      // Should navigate to page 2 (may timeout if navigation is instant)
+      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {
+        // Intentionally ignored - pagination might be synchronous
+      });
       
       // URL might have page parameter or page indicator should change
       const pageIndicator = page.locator('text=/page 2|2 of/i');
@@ -193,7 +201,10 @@ test.describe('Expenses Page', () => {
 
     if (await amountHeader.count() > 0) {
       await amountHeader.click();
-      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
+      // Wait for sorting to complete (may timeout if sort is instant)
+      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {
+        // Intentionally ignored - sorting might be synchronous
+      });
 
       // Check if expenses are sorted (implementation-specific)
       // This is a basic check - adjust based on your UI
