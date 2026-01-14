@@ -2,6 +2,7 @@ package com.tgboyles.frugalfox.user;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -64,6 +65,22 @@ public class SettingsController {
 		@Valid @RequestBody UpdatePasswordRequest request, @AuthenticationPrincipal User user) {
 		userService.updatePassword(user, request.getCurrentPassword(), request.getNewPassword());
 		MessageResponse response = new MessageResponse("Password updated successfully");
+		return ResponseEntity.ok(response);
+	}
+
+	/**
+	 * Deletes the authenticated user's account.
+	 *
+	 * <p>This will permanently delete the user account and all associated data including
+	 * expenses.
+	 *
+	 * @param user the authenticated user
+	 * @return success message
+	 */
+	@DeleteMapping("/user")
+	public ResponseEntity<MessageResponse> deleteUser(@AuthenticationPrincipal User user) {
+		userService.deleteUser(user);
+		MessageResponse response = new MessageResponse("User account deleted successfully");
 		return ResponseEntity.ok(response);
 	}
 }
