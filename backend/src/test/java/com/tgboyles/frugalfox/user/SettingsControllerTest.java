@@ -2,6 +2,7 @@ package com.tgboyles.frugalfox.user;
 
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -209,6 +210,23 @@ public class SettingsControllerTest {
 				put("/settings/password")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isForbidden());
+	}
+
+	@Test
+	public void testDeleteUserSuccess() throws Exception {
+		String token = registerAndGetToken("testuser6", "password123", "test6@example.com");
+
+		mvc.perform(
+				delete("/settings/user")
+					.header("Authorization", "Bearer " + token))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.message").value("User account deleted successfully"));
+	}
+
+	@Test
+	public void testDeleteUserUnauthorized() throws Exception {
+		mvc.perform(delete("/settings/user"))
 			.andExpect(status().isForbidden());
 	}
 }

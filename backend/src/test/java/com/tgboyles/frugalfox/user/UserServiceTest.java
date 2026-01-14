@@ -102,4 +102,17 @@ public class UserServiceTest {
 		verify(passwordEncoder, never()).encode(anyString());
 		verify(userRepository, never()).save(any(User.class));
 	}
+
+	@Test
+	public void deleteUser_ValidUser_DeletesUserSuccessfully() {
+		// Arrange
+		User user = new User("testuser", "hashedPassword", "test@example.com");
+		user.setId(1L);
+
+		// Act
+		userService.deleteUser(user);
+
+		// Assert
+		verify(userRepository).delete(user);
+	}
 }

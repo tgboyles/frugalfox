@@ -105,4 +105,15 @@ public User updatePassword(User user, String currentPassword, String newPassword
 	user.setPassword(passwordEncoder.encode(newPassword));
 	return userRepository.save(user);
 }
+
+/**
+* Deletes a user account.
+*
+* <p>This will cascade delete all associated expenses due to database foreign key constraints.
+*
+* @param user the user to delete
+*/
+public void deleteUser(User user) {
+	userRepository.delete(user);
+}
 }
