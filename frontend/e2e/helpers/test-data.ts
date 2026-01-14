@@ -111,7 +111,7 @@ export async function createTestExpense(
     category: expense.category || 'Food',
     merchant: expense.merchant || 'Test Merchant',
     date: expense.date || new Date().toISOString().split('T')[0],
-    bank: expense.bank,
+    bank: expense.bank || 'Chase',
   };
 
   const response = await request.post(`${API_BASE_URL}/expenses`, {
@@ -172,6 +172,7 @@ export async function createMultipleTestExpenses(
   const expenses: TestExpense[] = [];
   const categories = ['Food', 'Transport', 'Entertainment', 'Shopping', 'Bills'];
   const merchants = ['Walmart', 'Amazon', 'Starbucks', 'Shell', 'Netflix'];
+  const banks = ['Chase', 'Amex', 'Citi', 'Wells Fargo', 'Capital One'];
 
   for (let i = 0; i < count; i++) {
     const date = new Date();
@@ -182,6 +183,7 @@ export async function createMultipleTestExpenses(
       category: categories[i % categories.length],
       merchant: merchants[i % merchants.length],
       date: date.toISOString().split('T')[0],
+      bank: banks[i % banks.length],
     });
 
     expenses.push(expense);

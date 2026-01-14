@@ -23,7 +23,7 @@ test.describe('Smoke Tests', () => {
     expect(data.status).toBe('UP');
   });
 
-  test('should be able to register a new user', async ({ page, request }) => {
+  test('should be able to register a new user', async ({ request }) => {
     const username = `smoketest_${Date.now()}`;
     const password = 'SmokeTest123!';
     const email = `${username}@test.com`;

@@ -6,35 +6,27 @@
 import { test, expect } from './fixtures';
 
 test.describe('Add Expense', () => {
-  test('should add a new expense successfully', async ({ page, authenticatedUser }) => {
+  test('should add a new expense successfully', async ({ page, authenticatedUser: _user }) => {
     await page.goto('/dashboard/add-expense');
 
-    // Fill in expense form
-    await page.fill('input[name="amount"]', '99.99');
-    await page.fill('input[name="merchant"]', 'Test Store');
-    
-    // Select category (could be dropdown or input based on implementation)
-    const categoryInput = page.locator('input[name="category"], select[name="category"]');
-    if (await categoryInput.count() > 0) {
-      await categoryInput.first().fill('Food');
-    }
+    // Fill in expense form (using id selectors to match the form)
+    await page.fill('#amount', '99.99');
+    await page.fill('#merchant', 'Test Store');
+    await page.fill('#category', 'Food');
 
     // Fill in date
     const today = new Date().toISOString().split('T')[0];
-    await page.fill('input[name="date"], input[type="date"]', today);
+    await page.fill('#date', today);
 
     // Optional: fill in bank
-    const bankInput = page.locator('input[name="bank"]');
-    if (await bankInput.count() > 0) {
-      await bankInput.fill('Chase');
-    }
+    await page.fill('#bank', 'Chase');
 
     // Submit form
-    await page.click('button[type="submit"], button:has-text("Add"), button:has-text("Save")');
+    await page.click('button[type="submit"]');
 
     // Should show success message or redirect
     await expect(
-      page.locator('text=/success|added|created/i, [role="alert"]')
+      page.locator('text=/success|added|created/i')
     ).toBeVisible({ timeout: 5000 }).catch(() => {
       // Alternative: check if redirected to expenses page
       return expect(page).toHaveURL(/\/dashboard\/expenses/, { timeout: 5000 });
@@ -43,87 +35,73 @@ test.describe('Add Expense', () => {
 
   test('should show validation error for invalid amount', async ({
     page,
-    authenticatedUser,
+    authenticatedUser: _user,
   }) => {
     await page.goto('/dashboard/add-expense');
 
-    // Fill in invalid amount
-    await page.fill('input[name="amount"]', '-10');
-    await page.fill('input[name="merchant"]', 'Test Store');
-
-    const categoryInput = page.locator('input[name="category"], select[name="category"]');
-    if (await categoryInput.count() > 0) {
-      await categoryInput.first().fill('Food');
-    }
+    // Fill in invalid amount (0 is invalid since amount must be > 0)
+    await page.fill('#amount', '0');
+    await page.fill('#merchant', 'Test Store');
+    await page.fill('#category', 'Food');
 
     const today = new Date().toISOString().split('T')[0];
-    await page.fill('input[name="date"], input[type="date"]', today);
+    await page.fill('#date', today);
 
     await page.click('button[type="submit"]');
 
-    // Should show validation error
-    await expect(page.locator('text=/invalid|error|must be/i')).toBeVisible({
+    // Should show validation error "Amount must be a valid number greater than 0"
+    await expect(page.locator('text=Amount must be a valid number greater than 0')).toBeVisible({
       timeout: 3000,
     });
   });
 
   test('should show validation error for missing required fields', async ({
     page,
-    authenticatedUser,
+    authenticatedUser: _user,
   }) => {
     await page.goto('/dashboard/add-expense');
 
-    // Try to submit without filling required fields
+    // Clear the default date and try to submit without filling required fields
+    await page.fill('#date', '');
     await page.click('button[type="submit"]');
 
-    // Should show validation errors
-    await expect(page.locator('text=/required|must|field/i')).toBeVisible({
+    // Should show validation errors (use .first() since multiple errors will appear)
+    await expect(page.locator('text=/is required/i').first()).toBeVisible({
       timeout: 3000,
     });
   });
 
   test('should clear form after successful submission', async ({
     page,
-    authenticatedUser,
+    authenticatedUser: _user,
   }) => {
     await page.goto('/dashboard/add-expense');
 
     // Fill in expense form
-    await page.fill('input[name="amount"]', '50.00');
-    await page.fill('input[name="merchant"]', 'Coffee Shop');
-
-    const categoryInput = page.locator('input[name="category"], select[name="category"]');
-    if (await categoryInput.count() > 0) {
-      await categoryInput.first().fill('Food');
-    }
+    await page.fill('#amount', '50.00');
+    await page.fill('#merchant', 'Coffee Shop');
+    await page.fill('#category', 'Food');
+    await page.fill('#bank', 'Chase'); // Bank is required by backend
 
     const today = new Date().toISOString().split('T')[0];
-    await page.fill('input[name="date"], input[type="date"]', today);
+    await page.fill('#date', today);
 
     await page.click('button[type="submit"]');
 
-    // Wait for form submission to complete (may timeout if redirect is fast)
-    await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {
-      // Intentionally ignored - form might redirect immediately
-    });
+    // Wait for success message "Expense created successfully! Redirecting..."
+    await expect(
+      page.locator('text=Expense created successfully! Redirecting...')
+    ).toBeVisible({ timeout: 5000 });
 
-    // Check if still on add expense page
-    if (page.url().includes('add-expense')) {
-      // Form should be cleared
-      await expect(page.locator('input[name="merchant"]')).toHaveValue('');
-    }
+    // Then wait for redirect to expenses page (after 1 second delay per REDIRECT_DELAY_MS)
+    await expect(page).toHaveURL(/\/dashboard\/expenses/, { timeout: 6000 });
   });
 
-  test('should navigate back to expenses list', async ({ page, authenticatedUser }) => {
+  test('should navigate back to expenses list', async ({ page, authenticatedUser: _user }) => {
     await page.goto('/dashboard/add-expense');
 
-    // Click cancel or back button
-    await page.click(
-      'button:has-text("Cancel"), button:has-text("Back"), a:has-text("Back")'
-    ).catch(async () => {
-      // Alternative: click expenses link in navigation
-      await page.click('a[href="/dashboard/expenses"]');
-    });
+    // Click expenses link in navigation sidebar
+    await page.click('a[href="/dashboard/expenses"]');
 
     // Should navigate to expenses page
     await expect(page).toHaveURL(/\/dashboard\/expenses/, { timeout: 5000 });

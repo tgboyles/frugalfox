@@ -12,7 +12,7 @@ import { tmpdir } from 'os';
 test.describe('CSV Import/Export', () => {
   test('should import expenses from CSV file', async ({
     page,
-    authenticatedUser,
+    authenticatedUser: _user,
   }) => {
     // Create a temporary CSV file with dynamic dates
     const today = new Date();
@@ -20,88 +20,64 @@ test.describe('CSV Import/Export', () => {
     yesterday.setDate(yesterday.getDate() - 1);
     const twoDaysAgo = new Date(today);
     twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-    
+
     const formatDate = (date: Date) => date.toISOString().split('T')[0];
-    
-    const csvContent = `amount,category,merchant,date,bank
-25.50,Food,Starbucks,${formatDate(yesterday)},Chase
-150.00,Shopping,Amazon,${formatDate(twoDaysAgo)},Wells Fargo
-45.75,Transport,Shell,${formatDate(today)},Chase`;
+
+    const csvContent = `date,merchant,amount,bank,category
+${formatDate(yesterday)},Starbucks,25.50,Chase,Food
+${formatDate(twoDaysAgo)},Amazon,150.00,Wells Fargo,Shopping
+${formatDate(today)},Shell,45.75,Chase,Transport`;
 
     const tempDir = tmpdir();
     const csvFilePath = join(tempDir, `test-expenses-${Date.now()}.csv`);
     await writeFile(csvFilePath, csvContent);
 
+    // Navigate to add-expense page where import is located
+    await page.goto('/dashboard/add-expense');
+
+    // Find the CSV file input (id="csv-file")
+    const fileInput = page.locator('#csv-file');
+    await fileInput.setInputFiles(csvFilePath);
+
+    // Click upload button
+    await page.click('button:has-text("Upload and Import")');
+
+    // Wait for import to complete
+    await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {});
+
+    // Should show import results with success count (use .first() for strict mode)
+    await expect(
+      page.locator('text=Import Results')
+    ).toBeVisible({ timeout: 5000 });
+
+    // Navigate to expenses to verify import
     await page.goto('/dashboard/expenses');
-
-    // Find import button (adjust selector based on implementation)
-    const importButton = page.locator(
-      'button:has-text("Import"), [data-testid="import-button"], input[type="file"]'
-    ).first();
-
-    if (await importButton.count() > 0) {
-      // If it's a file input directly
-      if ((await importButton.getAttribute('type')) === 'file') {
-        await importButton.setInputFiles(csvFilePath);
-      } else {
-        // If it's a button that triggers a file input
-        await importButton.click();
-        
-        // Find the file input
-        const fileInput = page.locator('input[type="file"]');
-        await fileInput.setInputFiles(csvFilePath);
-      }
-
-      // Wait for import to complete using explicit wait (may timeout if page reloads)
-      await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => {
-        // Intentionally ignored - page might reload before networkidle is reached
-      });
-
-      // Should show success message
-      await expect(
-        page.locator('text=/imported|success|uploaded/i, [role="alert"]')
-      ).toBeVisible({ timeout: 5000 }).catch(() => {
-        // Import might auto-refresh the page, wait for page load instead
-        return page.waitForLoadState('load');
-      });
-
-      // Verify imported expenses appear in the list
-      await expect(page.locator('text=Starbucks')).toBeVisible({ timeout: 5000 });
-    }
+    await expect(page.locator('text=Starbucks')).toBeVisible({ timeout: 5000 });
   });
 
   test('should show error for invalid CSV format', async ({
     page,
-    authenticatedUser,
+    authenticatedUser: _user,
   }) => {
-    // Create an invalid CSV file
+    // Create an invalid CSV file (wrong column order/names)
     const csvContent = `invalid,header,format
-not,a,valid,expense`;
+not,a,valid`;
 
     const tempDir = tmpdir();
     const csvFilePath = join(tempDir, `invalid-expenses-${Date.now()}.csv`);
     await writeFile(csvFilePath, csvContent);
 
-    await page.goto('/dashboard/expenses');
+    await page.goto('/dashboard/add-expense');
 
-    const importButton = page.locator(
-      'button:has-text("Import"), [data-testid="import-button"], input[type="file"]'
-    ).first();
+    const fileInput = page.locator('#csv-file');
+    await fileInput.setInputFiles(csvFilePath);
 
-    if (await importButton.count() > 0) {
-      if ((await importButton.getAttribute('type')) === 'file') {
-        await importButton.setInputFiles(csvFilePath);
-      } else {
-        await importButton.click();
-        const fileInput = page.locator('input[type="file"]');
-        await fileInput.setInputFiles(csvFilePath);
-      }
+    await page.click('button:has-text("Upload and Import")');
 
-      // Should show error message
-      await expect(
-        page.locator('text=/error|invalid|failed/i')
-      ).toBeVisible({ timeout: 5000 });
-    }
+    // Should show error message in import results
+    await expect(
+      page.locator('text=/error|failed|invalid/i')
+    ).toBeVisible({ timeout: 5000 });
   });
 
   test('should export expenses to CSV', async ({
@@ -112,32 +88,27 @@ not,a,valid,expense`;
     // Create test expenses to export
     await createMultipleTestExpenses(request, authenticatedUser.token!, 10);
 
-    await page.goto('/dashboard/expenses');
+    // Export is on settings page
+    await page.goto('/dashboard/settings');
 
-    // Find export button
-    const exportButton = page.locator(
-      'button:has-text("Export"), [data-testid="export-button"]'
-    );
+    // Listen for download event
+    const downloadPromise = page.waitForEvent('download', { timeout: 5000 });
 
-    if (await exportButton.count() > 0) {
-      // Listen for download event
-      const downloadPromise = page.waitForEvent('download', { timeout: 5000 });
+    // Click download CSV button
+    await page.click('button:has-text("Download CSV")');
 
-      await exportButton.click();
+    const download = await downloadPromise;
 
-      const download = await downloadPromise;
+    // Verify the download
+    expect(download.suggestedFilename()).toMatch(/\.csv$/);
 
-      // Verify the download
-      expect(download.suggestedFilename()).toMatch(/\.csv$/);
+    // Save the file to verify content
+    const tempDir = tmpdir();
+    const downloadPath = join(tempDir, download.suggestedFilename());
+    await download.saveAs(downloadPath);
 
-      // Save the file to verify content
-      const tempDir = tmpdir();
-      const downloadPath = join(tempDir, download.suggestedFilename());
-      await download.saveAs(downloadPath);
-
-      // Verify file was downloaded
-      expect(downloadPath).toBeTruthy();
-    }
+    // Verify file was downloaded
+    expect(downloadPath).toBeTruthy();
   });
 
   test('should export filtered expenses', async ({
@@ -148,45 +119,33 @@ not,a,valid,expense`;
     // Create expenses with different categories
     await createMultipleTestExpenses(request, authenticatedUser.token!, 15);
 
-    await page.goto('/dashboard/expenses');
+    // Export with filters is on settings page
+    await page.goto('/dashboard/settings');
 
     // Apply a filter (e.g., category)
-    const categoryFilter = page.locator(
-      'select[name="category"], [data-testid="category-filter"]'
-    ).first();
+    await page.fill('#export-category', 'Food');
 
-    if (await categoryFilter.count() > 0) {
-      // May fail if element doesn't support select - intentionally ignored
-      await categoryFilter.selectOption('Food').catch(() => {});
-      await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {
-        // Intentionally ignored - may timeout if filtering is instant
-      });
+    // Listen for download event
+    const downloadPromise = page.waitForEvent('download', { timeout: 5000 }).catch(() => null);
 
-      // Export filtered results
-      const exportButton = page.locator('button:has-text("Export")');
-      
-      if (await exportButton.count() > 0) {
-        // Export may not trigger if feature is disabled/missing - returns null in that case
-        const downloadPromise = page.waitForEvent('download', { timeout: 5000 }).catch(() => null);
-        await exportButton.click();
+    // Click download button
+    await page.click('button:has-text("Download CSV")');
 
-        const download = await downloadPromise;
-        if (download) {
-          expect(download.suggestedFilename()).toMatch(/\.csv$/);
-        }
-      }
+    const download = await downloadPromise;
+    if (download) {
+      expect(download.suggestedFilename()).toMatch(/\.csv$/);
     }
   });
 
-  test('should handle large CSV import', async ({ page, authenticatedUser }) => {
+  test('should handle large CSV import', async ({ page, authenticatedUser: _user }) => {
     // Create a CSV with many rows (but within limit)
-    const rows = ['amount,category,merchant,date,bank'];
+    const rows = ['date,merchant,amount,bank,category'];
     const today = new Date();
     for (let i = 1; i <= 100; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() - (i % 28));
       const formatDate = (d: Date) => d.toISOString().split('T')[0];
-      rows.push(`${10 + i},Food,Store ${i},${formatDate(date)},Chase`);
+      rows.push(`${formatDate(date)},Store ${i},${10 + i},Chase,Food`);
     }
     const csvContent = rows.join('\n');
 
@@ -194,25 +153,19 @@ not,a,valid,expense`;
     const csvFilePath = join(tempDir, `large-expenses-${Date.now()}.csv`);
     await writeFile(csvFilePath, csvContent);
 
-    await page.goto('/dashboard/expenses');
+    await page.goto('/dashboard/add-expense');
 
-    const importButton = page.locator('input[type="file"]').first();
+    const fileInput = page.locator('#csv-file');
+    await fileInput.setInputFiles(csvFilePath);
 
-    if (await importButton.count() > 0) {
-      await importButton.setInputFiles(csvFilePath);
+    await page.click('button:has-text("Upload and Import")');
 
-      // Wait for import to complete (might take longer) - use networkidle
-      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
-        // Intentionally ignored - page might reload before networkidle
-      });
+    // Wait for import to complete (might take longer)
+    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
 
-      // Should show success or import in progress
-      await expect(
-        page.locator('text=/imported|success|processing/i, [role="alert"]')
-      ).toBeVisible({ timeout: 10000 }).catch(() => {
-        // Import might auto-refresh
-        return page.waitForLoadState('load');
-      });
-    }
+    // Should show success in import results (use exact match to avoid strict mode)
+    await expect(
+      page.locator('text=Import Results')
+    ).toBeVisible({ timeout: 10000 });
   });
 });

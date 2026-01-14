@@ -20,19 +20,19 @@ test.describe('Authentication', () => {
 
     await page.goto('/login');
 
-    // Switch to register tab
-    await page.click('text=Register');
+    // Switch to register mode by clicking "Sign up" link
+    await page.click('text=Sign up');
 
-    // Fill in registration form
-    await page.fill('input[name="username"]', username);
-    await page.fill('input[name="email"]', email);
-    await page.fill('input[name="password"]', password);
+    // Fill in registration form (using id selectors)
+    await page.fill('#username', username);
+    await page.fill('#email', email);
+    await page.fill('#password', password);
 
     // Submit form
     await page.click('button[type="submit"]');
 
     // Should redirect to dashboard after successful registration
-    await expect(page).toHaveURL(/\/dashboard/);
+    await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
   });
 
   test('should login with existing user', async ({ page, request }) => {
@@ -52,27 +52,28 @@ test.describe('Authentication', () => {
     // Now test login via UI
     await page.goto('/login');
 
-    // Should be on login tab by default
-    await page.fill('input[name="username"]', username);
-    await page.fill('input[name="password"]', password);
+    // Should be on login mode by default
+    await page.fill('#username', username);
+    await page.fill('#password', password);
 
     await page.click('button[type="submit"]');
 
     // Should redirect to dashboard after successful login
-    await expect(page).toHaveURL(/\/dashboard/);
+    await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
   });
 
   test('should show error for invalid credentials', async ({ page }) => {
     await page.goto('/login');
 
-    await page.fill('input[name="username"]', 'nonexistentuser');
-    await page.fill('input[name="password"]', 'WrongPassword123!');
+    await page.fill('#username', 'nonexistentuser');
+    await page.fill('#password', 'WrongPassword123!');
 
     await page.click('button[type="submit"]');
 
-    // Should show error message (adjust selector based on your error display)
-    await expect(page.locator('text=/invalid|error|failed/i')).toBeVisible({
-      timeout: 5000,
+    // Should show error message (the actual message is "Failed to login. Please try again.")
+    // Wait for the request to complete and error to show
+    await expect(page.locator('text=/Failed to login|Invalid|error|credentials/i')).toBeVisible({
+      timeout: 10000,
     });
   });
 
@@ -110,17 +111,12 @@ test.describe('Authentication', () => {
       { token, username }
     );
 
-    // Navigate to dashboard
-    await page.goto('/dashboard');
-    await expect(page).toHaveURL(/\/dashboard/);
+    // Navigate to settings page where logout button is located
+    await page.goto('/dashboard/settings');
+    await expect(page).toHaveURL(/\/dashboard\/settings/);
 
-    // Logout (adjust selector based on your UI - might be in settings or a menu)
-    // This is a placeholder - adjust based on actual logout button location
-    await page.click('[data-testid="logout-button"], button:has-text("Logout"), text=Logout').catch(async () => {
-      // If logout button is in settings, navigate there first
-      await page.goto('/dashboard/settings');
-      await page.click('button:has-text("Logout"), text=Logout');
-    });
+    // Click logout button
+    await page.click('button:has-text("Logout"), button:has-text("Sign Out")');
 
     // Should redirect to login page
     await expect(page).toHaveURL(/\/login/, { timeout: 5000 });

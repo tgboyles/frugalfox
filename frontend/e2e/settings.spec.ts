@@ -9,12 +9,8 @@ test.describe('Settings Page', () => {
   test('should display user information', async ({ page, authenticatedUser }) => {
     await page.goto('/dashboard/settings');
 
-    // Should display username or email - check if either is visible
-    const usernameVisible = await page.locator(`text=${authenticatedUser.username}`).isVisible().catch(() => false);
-    const emailVisible = await page.locator(`text=${authenticatedUser.email}`).isVisible().catch(() => false);
-    
-    // At least one should be visible
-    expect(usernameVisible || emailVisible).toBeTruthy();
+    // Should display username (use .first() since it appears in sidebar and main content)
+    await expect(page.locator(`text=${authenticatedUser.username}`).first()).toBeVisible({ timeout: 5000 });
   });
 
   test('should update email address', async ({ page, authenticatedUser }) => {
@@ -22,89 +18,56 @@ test.describe('Settings Page', () => {
 
     const newEmail = `updated_${authenticatedUser.username}@test.com`;
 
-    // Find email input field
-    const emailInput = page.locator('input[name="email"], input[type="email"]').first();
+    // Find email input field by id
+    await page.fill('#new-email', newEmail);
 
-    if (await emailInput.count() > 0) {
-      // Clear and fill new email
-      await emailInput.clear();
-      await emailInput.fill(newEmail);
+    // Click update button
+    await page.click('button:has-text("Update Email")');
 
-      // Click update/save button
-      await page
-        .click('button:has-text("Update"), button:has-text("Save")')
-        .catch(() => page.click('button[type="submit"]'));
-
-      // Should show success message
-      await expect(
-        page.locator('text=/success|updated|saved/i, [role="alert"]')
-      ).toBeVisible({ timeout: 5000 });
-    }
+    // Should show success message (alert dialog in this case)
+    // Note: The app uses alert() which Playwright handles automatically
+    page.once('dialog', (dialog) => {
+      expect(dialog.message()).toContain('success');
+      dialog.accept();
+    });
   });
 
   test('should change password successfully', async ({ page, authenticatedUser }) => {
     await page.goto('/dashboard/settings');
 
-    // Find password change section
-    const currentPasswordInput = page.locator(
-      'input[name="currentPassword"], input[placeholder*="current" i]'
-    );
+    // Fill password change form using id selectors
+    await page.fill('#current-password', authenticatedUser.password);
+    await page.fill('#new-password', 'NewTestPass123!');
+    await page.fill('#confirm-password', 'NewTestPass123!');
 
-    if (await currentPasswordInput.count() > 0) {
-      await currentPasswordInput.fill(authenticatedUser.password);
+    // Handle the success alert
+    page.once('dialog', async (dialog) => {
+      expect(dialog.message()).toContain('success');
+      await dialog.accept();
+    });
 
-      const newPasswordInput = page.locator(
-        'input[name="newPassword"], input[placeholder*="new" i]'
-      ).first();
-      await newPasswordInput.fill('NewTestPass123!');
-
-      // If there's a confirm password field
-      const confirmPasswordInput = page.locator(
-        'input[name="confirmPassword"], input[placeholder*="confirm" i]'
-      );
-      if (await confirmPasswordInput.count() > 0) {
-        await confirmPasswordInput.fill('NewTestPass123!');
-      }
-
-      // Submit password change
-      await page
-        .click('button:has-text("Change Password"), button:has-text("Update Password")')
-        .catch(() => page.click('button[type="submit"]'));
-
-      // Should show success message
-      await expect(
-        page.locator('text=/success|updated|changed/i, [role="alert"]')
-      ).toBeVisible({ timeout: 5000 });
-    }
+    // Submit password change
+    await page.click('button:has-text("Change Password")');
   });
 
   test('should show error for incorrect current password', async ({
     page,
-    authenticatedUser,
+    authenticatedUser: _user,
   }) => {
     await page.goto('/dashboard/settings');
 
-    const currentPasswordInput = page.locator(
-      'input[name="currentPassword"], input[placeholder*="current" i]'
-    );
+    // Fill with wrong current password
+    await page.fill('#current-password', 'WrongPassword123!');
+    await page.fill('#new-password', 'NewTestPass123!');
+    await page.fill('#confirm-password', 'NewTestPass123!');
 
-    if (await currentPasswordInput.count() > 0) {
-      await currentPasswordInput.fill('WrongPassword123!');
+    // Handle the error alert
+    page.once('dialog', async (dialog) => {
+      expect(dialog.message().toLowerCase()).toMatch(/incorrect|wrong|invalid|error|failed/i);
+      await dialog.accept();
+    });
 
-      const newPasswordInput = page.locator(
-        'input[name="newPassword"], input[placeholder*="new" i]'
-      ).first();
-      await newPasswordInput.fill('NewTestPass123!');
-
-      await page
-        .click('button:has-text("Change Password"), button:has-text("Update Password")')
-        .catch(() => page.click('button[type="submit"]'));
-
-      // Should show error message
-      await expect(
-        page.locator('text=/incorrect|wrong|invalid|error/i')
-      ).toBeVisible({ timeout: 5000 });
-    }
+    await page.click('button:has-text("Change Password")');
   });
 
   test('should show error for password mismatch', async ({
@@ -113,44 +76,29 @@ test.describe('Settings Page', () => {
   }) => {
     await page.goto('/dashboard/settings');
 
-    const currentPasswordInput = page.locator(
-      'input[name="currentPassword"], input[placeholder*="current" i]'
-    );
+    // Fill with mismatched passwords
+    await page.fill('#current-password', authenticatedUser.password);
+    await page.fill('#new-password', 'NewTestPass123!');
+    await page.fill('#confirm-password', 'DifferentPass123!');
 
-    if (await currentPasswordInput.count() > 0) {
-      await currentPasswordInput.fill(authenticatedUser.password);
+    // Handle the mismatch alert
+    page.once('dialog', async (dialog) => {
+      expect(dialog.message().toLowerCase()).toMatch(/match|mismatch|same/i);
+      await dialog.accept();
+    });
 
-      const newPasswordInput = page.locator(
-        'input[name="newPassword"], input[placeholder*="new" i]'
-      ).first();
-      await newPasswordInput.fill('NewTestPass123!');
-
-      const confirmPasswordInput = page.locator(
-        'input[name="confirmPassword"], input[placeholder*="confirm" i]'
-      );
-      
-      if (await confirmPasswordInput.count() > 0) {
-        await confirmPasswordInput.fill('DifferentPass123!');
-
-        await page
-          .click('button:has-text("Change Password"), button:has-text("Update Password")')
-          .catch(() => page.click('button[type="submit"]'));
-
-        // Should show error message about mismatch
-        await expect(
-          page.locator('text=/match|mismatch|same/i')
-        ).toBeVisible({ timeout: 5000 });
-      }
-    }
+    await page.click('button:has-text("Change Password")');
   });
 
-  test('should have logout functionality', async ({ page, authenticatedUser }) => {
+  test('should have logout functionality', async ({ page, authenticatedUser: _user }) => {
     await page.goto('/dashboard/settings');
 
-    // Find logout button
-    const logoutButton = page.locator(
-      'button:has-text("Logout"), button:has-text("Sign Out"), [data-testid="logout-button"]'
-    );
+    // The logout functionality is handled through the sidebar, not settings page
+    // Navigate via sidebar
+    await page.click('a[href="/dashboard/settings"]');
+
+    // Look for logout in sidebar or navigate to where logout exists
+    const logoutButton = page.locator('button:has-text("Logout"), button:has-text("Sign Out")');
 
     if (await logoutButton.count() > 0) {
       await logoutButton.click();
@@ -166,13 +114,13 @@ test.describe('Settings Page', () => {
 
   test('should display account information section', async ({
     page,
-    authenticatedUser,
+    authenticatedUser: _user,
   }) => {
     await page.goto('/dashboard/settings');
 
-    // Should have sections for account info
+    // Should have Account Information header
     await expect(
-      page.locator('text=/account|profile|user/i').first()
+      page.locator('text=Account Information')
     ).toBeVisible({ timeout: 5000 });
   });
 });

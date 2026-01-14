@@ -101,10 +101,10 @@ test.describe('Expenses Page', () => {
     }
   });
 
-  test('should delete an expense', async ({ page, authenticatedUser, request }) => {
+  test('should edit an expense', async ({ page, authenticatedUser, request }) => {
     // Create a test expense
     const expense = await createTestExpense(request, authenticatedUser.token!, {
-      merchant: 'To Be Deleted',
+      merchant: 'To Be Edited',
       amount: 99.99,
     });
 
@@ -114,32 +114,23 @@ test.describe('Expenses Page', () => {
     const expenseRow = page.locator(`text=${expense.merchant}`).first();
     await expect(expenseRow).toBeVisible();
 
-    // Click delete button (adjust selector based on implementation)
-    await page
-      .locator(
-        `tr:has-text("${expense.merchant}") button:has-text("Delete"), [data-testid="delete-${expense.id}"]`
-      )
-      .first()
-      .click()
-      .catch(async () => {
-        // Alternative: click on delete icon
-        await page.locator(`tr:has-text("${expense.merchant}") [aria-label="Delete"]`).click();
-      });
+    // Click edit button (the pencil icon in the row)
+    await page.locator(`tr:has-text("${expense.merchant}") button`).click();
 
-    // Confirm deletion if there's a confirmation dialog
-    await page
-      .click('button:has-text("Confirm"), button:has-text("Yes"), button:has-text("Delete")')
-      .catch(() => {
-        // No confirmation dialog
-      });
+    // Edit dialog should appear (use heading role to avoid strict mode violation with sr-only span)
+    await expect(page.getByRole('heading', { name: 'Edit Expense' })).toBeVisible({ timeout: 3000 });
 
-    // Wait for deletion to complete (may timeout if deletion is instant)
-    await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {
-      // Intentionally ignored - deletion might be synchronous
-    });
+    // Update the merchant name
+    await page.fill('#edit-merchant', 'Updated Merchant');
 
-    // Expense should no longer be visible
-    await expect(page.locator(`text=${expense.merchant}`)).not.toBeVisible();
+    // Save changes
+    await page.click('button:has-text("Save Changes")');
+
+    // Wait for dialog to close and update to complete
+    await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
+
+    // Updated expense should be visible
+    await expect(page.locator('text=Updated Merchant')).toBeVisible({ timeout: 5000 });
   });
 
   test('should paginate through expenses', async ({
