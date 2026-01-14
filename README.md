@@ -2,6 +2,9 @@
 
 # Frugal Fox
 
+[![Backend Test & Format](https://github.com/tgboyles/frugalfox/actions/workflows/backend-test.yml/badge.svg)](https://github.com/tgboyles/frugalfox/actions/workflows/backend-test.yml)
+[![Frontend Lint, Format & Test](https://github.com/tgboyles/frugalfox/actions/workflows/frontend-lint.yml/badge.svg)](https://github.com/tgboyles/frugalfox/actions/workflows/frontend-lint.yml)
+
 A full-stack expense tracking application demonstrating modern Java, Spring Boot, React, and AI technologies including agentic behaviors, Model Context Protocol (MCP), and chat capabilities.
 
 ## Overview
