@@ -123,4 +123,47 @@ test.describe('Settings Page', () => {
       page.locator('text=Account Information')
     ).toBeVisible({ timeout: 5000 });
   });
+
+  test('should delete account successfully', async ({ page, authenticatedUser }) => {
+    await page.goto('/dashboard/settings');
+
+    // Wait for settings page to load
+    await expect(page.locator('text=Account Information')).toBeVisible({ timeout: 5000 });
+
+    // Handle the confirmation dialog (first confirm)
+    page.once('dialog', async (dialog) => {
+      expect(dialog.type()).toBe('confirm');
+      expect(dialog.message().toLowerCase()).toMatch(/delete|cannot be undone|permanently/i);
+      await dialog.accept();
+    });
+
+    // Handle the success alert (second dialog)
+    page.once('dialog', async (dialog) => {
+      expect(dialog.type()).toBe('alert');
+      expect(dialog.message().toLowerCase()).toMatch(/deleted|success/i);
+      await dialog.accept();
+    });
+
+    // Click delete account button
+    await page.click('button:has-text("Delete Account")');
+
+    // Should redirect to login page
+    await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
+
+    // Token should be cleared from localStorage
+    const token = await page.evaluate(() => localStorage.getItem('token'));
+    expect(token).toBeNull();
+
+    // Try to login with deleted user - should fail
+    await page.fill('input[type="text"]', authenticatedUser.username);
+    await page.fill('input[type="password"]', authenticatedUser.password);
+
+    // Handle the error alert
+    page.once('dialog', async (dialog) => {
+      expect(dialog.message().toLowerCase()).toMatch(/invalid|error|failed|not found/i);
+      await dialog.accept();
+    });
+
+    await page.click('button:has-text("Sign In")');
+  });
 });

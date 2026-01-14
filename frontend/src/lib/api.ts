@@ -118,4 +118,6 @@ export const settingsApi = {
 
   updatePassword: (currentPassword: string, newPassword: string) =>
     api.put('/settings/password', { currentPassword, newPassword }),
+
+  deleteUser: () => api.delete('/settings/user'),
 };

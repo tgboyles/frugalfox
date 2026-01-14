@@ -98,9 +98,26 @@ export default function AuthPage() {
       }
       navigate('/dashboard');
     } catch (err: unknown) {
-      const errorMessage =
-        (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
-        `Failed to ${isLogin ? 'login' : 'register'}. Please try again.`;
+      const responseData = (
+        err as {
+          response?: {
+            data?: {
+              message?: string;
+              errors?: Array<{ field: string; message: string }>;
+            };
+          };
+        }
+      ).response?.data;
+
+      let errorMessage: string;
+      if (responseData?.errors && responseData.errors.length > 0) {
+        // Display field-specific validation errors
+        errorMessage = responseData.errors.map((e) => e.message).join('. ');
+      } else if (responseData?.message) {
+        errorMessage = responseData.message;
+      } else {
+        errorMessage = `Failed to ${isLogin ? 'login' : 'register'}. Please try again.`;
+      }
       setError(errorMessage);
     } finally {
       setIsLoading(false);

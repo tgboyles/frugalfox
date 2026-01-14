@@ -9,10 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Download, Lock, Mail, FileDown, Sun, Moon } from 'lucide-react';
+import { Download, Lock, Mail, FileDown, Sun, Moon, Trash2 } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { username } = useAuth();
+  const { username, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [emailForm, setEmailForm] = useState({ email: '' });
   const [passwordForm, setPasswordForm] = useState({
@@ -106,6 +106,22 @@ export default function SettingsPage() {
     },
   });
 
+  // Delete account mutation
+  const deleteAccountMutation = useMutation({
+    mutationFn: async () => {
+      const response = await settingsApi.deleteUser();
+      return response.data as MessageResponse;
+    },
+    onSuccess: () => {
+      alert('Account deleted successfully. You will now be logged out.');
+      logout();
+      window.location.href = '/login';
+    },
+    onError: (error: { response?: { data?: { message?: string } } }) => {
+      alert(error.response?.data?.message || 'Failed to delete account');
+    },
+  });
+
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailForm.email) {
@@ -137,6 +153,14 @@ export default function SettingsPage() {
 
   const handleExport = () => {
     exportMutation.mutate();
+  };
+
+  const handleDeleteAccount = () => {
+    const confirmMessage =
+      'Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data including expenses.';
+    if (window.confirm(confirmMessage)) {
+      deleteAccountMutation.mutate();
+    }
   };
 
   return (
@@ -370,6 +394,32 @@ export default function SettingsPage() {
           <Button onClick={handleExport} disabled={exportMutation.isPending}>
             <Download className="mr-2 h-4 w-4" />
             {exportMutation.isPending ? 'Exporting...' : 'Download CSV'}
+          </Button>
+        </div>
+      </Card>
+
+      <Separator />
+
+      {/* Delete Account */}
+      <Card className="border-destructive p-6">
+        <div className="mb-4 flex items-center gap-2">
+          <Trash2 className="text-destructive h-5 w-5" />
+          <h3 className="text-destructive text-xl font-semibold">Danger Zone</h3>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <p className="font-medium">Delete Account</p>
+            <p className="text-muted-foreground text-sm">
+              Permanently delete your account and all associated data. This action cannot be undone.
+            </p>
+          </div>
+          <Button
+            onClick={handleDeleteAccount}
+            variant="destructive"
+            disabled={deleteAccountMutation.isPending}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            {deleteAccountMutation.isPending ? 'Deleting...' : 'Delete Account'}
           </Button>
         </div>
       </Card>
