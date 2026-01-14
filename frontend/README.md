@@ -78,6 +78,192 @@ The Docker setup uses:
 
 ### Testing
 
+#### Unit Tests
+
+Run unit tests with Vitest:
+```bash
+pnpm test
+```
+
+Run tests with UI:
+```bash
+pnpm test:ui
+```
+
+Run tests with coverage:
+```bash
+pnpm test:coverage
+```
+
+#### Integration Tests (E2E)
+
+End-to-end integration tests verify the complete user journey through the application using Playwright, including:
+- User authentication (registration, login, logout)
+- Dashboard navigation and data display
+- Expense management (create, view, update)
+- Search and filtering
+- CSV import/export
+- Settings management (email, password)
+
+**Prerequisites for E2E tests:**
+- Backend API running on http://localhost:8080
+- Frontend running on http://localhost:5173 (or set PLAYWRIGHT_BASE_URL)
+- PostgreSQL database accessible to the backend
+
+**Quick Start:**
+```bash
+# From project root, start backend and database
+docker compose up -d postgres backend
+
+# Verify backend is running
+curl http://localhost:8080/actuator/health  # Expected: {"status":"UP"}
+
+# From frontend directory, start dev server
+cd frontend
+pnpm dev
+
+# Install Playwright browsers (first time only)
+pnpm exec playwright install chromium
+
+# Run all tests (in another terminal)
+pnpm test:e2e
+```
+
+**Running Tests:**
+```bash
+# Run all tests (headless mode)
+pnpm test:e2e
+
+# Run tests with UI (interactive mode - recommended for development)
+pnpm test:e2e:ui
+
+# Run tests in headed mode (see browser)
+pnpm test:e2e:headed
+
+# Run tests in debug mode
+pnpm test:e2e:debug
+
+# Run specific test file
+pnpm test:e2e auth.spec.ts
+
+# Run tests with custom base URL
+PLAYWRIGHT_BASE_URL=http://localhost:3000 pnpm test:e2e
+```
+
+**Test Structure:**
+```
+e2e/
+├── fixtures.ts              # Custom test fixtures (authenticated user)
+├── helpers/
+│   └── test-data.ts         # Test data creation and cleanup utilities
+├── smoke.spec.ts            # Quick connectivity verification
+├── auth.spec.ts             # Authentication tests
+├── dashboard.spec.ts        # Dashboard home page tests
+├── add-expense.spec.ts      # Add expense form tests
+├── expenses.spec.ts         # Expense list, search, filter tests
+├── settings.spec.ts         # User settings tests
+└── import-export.spec.ts    # CSV import/export tests
+```
+
+**Test Data Management:**
+
+Tests automatically:
+- Create unique test users for each test
+- Set up required test data (expenses)
+- Clean up test data after test completion
+- Isolate tests from each other (no shared state)
+
+**Writing Authenticated Tests:**
+```typescript
+import { test, expect } from './fixtures';
+
+test('should do something', async ({ page, authenticatedUser }) => {
+  // User is already logged in
+  await page.goto('/dashboard');
+  // ... test code
+});
+```
+
+**API Helper Functions:**
+- `registerTestUser()` - Create a new test user
+- `loginTestUser()` - Login an existing user
+- `createTestExpense()` - Create a single expense
+- `createMultipleTestExpenses()` - Create multiple expenses
+- `deleteAllExpenses()` - Clean up all expenses for a user
+
+**Debugging Failed Tests:**
+```bash
+# View test report
+pnpm exec playwright show-report
+
+# Re-run failed tests
+pnpm test:e2e --last-failed
+
+# Run with trace viewer
+pnpm test:e2e --trace on
+```
+
+Failed tests automatically capture screenshots and videos in `test-results/`.
+
+**Troubleshooting:**
+
+| Problem | Solution |
+|---------|----------|
+| "Navigation timeout" | Ensure frontend is running (`curl http://localhost:5173`) |
+| "API request failed" | Ensure backend is running (`curl http://localhost:8080/actuator/health`) |
+| "Browser not installed" | Run `pnpm exec playwright install chromium` |
+| Tests are flaky | Increase timeout, add explicit waits, check for race conditions |
+
+**Best Practices:**
+1. **Isolation**: Each test should be independent
+2. **Cleanup**: Always clean up test data after completion
+3. **Selectors**: Use data-testid attributes for reliable element selection
+4. **Waits**: Use explicit waits instead of arbitrary timeouts
+5. **Coverage**: Focus on user journeys, not implementation details
+
+**Example GitHub Actions Workflow:**
+```yaml
+name: E2E Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - run: npm install -g pnpm
+      - run: docker compose up -d postgres backend
+      - run: timeout 60 bash -c 'until curl -f http://localhost:8080/actuator/health; do sleep 2; done'
+      - working-directory: ./frontend
+        run: |
+          pnpm install
+          pnpm exec playwright install chromium
+          pnpm dev &
+          timeout 60 bash -c 'until curl -f http://localhost:5173; do sleep 2; done'
+          pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+      - if: always()
+        run: docker compose down
+```
+
+**Resources:**
+- [Playwright Documentation](https://playwright.dev/)
+- [Best Practices Guide](https://playwright.dev/docs/best-practices)
+- [API Reference](https://playwright.dev/docs/api/class-test)
+
+#### Type Checking and Linting
+
 Run TypeScript type checking:
 ```bash
 pnpm build

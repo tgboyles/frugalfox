@@ -29,7 +29,8 @@ export default function DashboardHome() {
     // For production with large datasets, consider implementing server-side aggregation
   });
 
-  const expenses = expensesData?.data.content || [];
+  // Memoize expenses array to ensure stable reference for downstream useMemo hooks
+  const expenses = useMemo(() => expensesData?.data.content || [], [expensesData?.data.content]);
 
   // Calculate metrics - memoized to avoid recalculation on every render
   const { totalExpenses, averageExpense, categoryCount } = useMemo(() => {
